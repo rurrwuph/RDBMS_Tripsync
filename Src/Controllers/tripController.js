@@ -26,3 +26,27 @@ const searchTrips = async (req, res) => {
     }
 };
 
+const assignTrip = async (req, res) => {
+    const { operatorId, routeId, busId, tripDate, departureTime, fare } = req.body;
+
+    // if (!operatorId || !routeId || !busId || !tripDate || !departureTime || !fare) {
+    //     return res.status(400).json({ error: 'Please provide all required fields' });
+    // }
+
+    try {
+        await db.query(
+            'CALL assign_trip($1, $2, $3, $4, $5, $6)',
+            [operatorId, routeId, busId, tripDate, departureTime, fare]
+        );
+        res.status(201).json({ message: 'Trip assigned successfully' });
+    } catch (err) {
+        if (err.message.includes('Operator does not own this bus')) {
+            return res.status(403).json({ error: 'Security Alert: You do not own this bus' });
+        }
+
+        console.error('Assign Trip Error:', err);
+        res.status(500).json({ error: 'Database error during trip assignment' });
+    }
+};
+
+module.exports = { searchTrips, assignTrip };
