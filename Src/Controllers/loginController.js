@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const login = async (req, res) => {
 
@@ -43,6 +44,11 @@ const login = async (req, res) => {
         const userId = type === 'customer' ? userRow.customerid : userRow.operatorid;
         const displayName = type === 'customer' ? userRow.fullname : userRow.companyname;
 
+        const token = jwt.sign(
+            { id: userId, role: type },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
         res.status(200).json({
             message: 'Login successful',
