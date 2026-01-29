@@ -25,7 +25,7 @@ CREATE TABLE BUS (
     BusID SERIAL PRIMARY KEY,
     OperatorID INT NOT NULL,
     BusNumber VARCHAR(20) UNIQUE NOT NULL,
-    BusType VARCHAR(20) NOT NULL CHECK (BusType IN ('AC', 'Non-AC')),
+    BusType VARCHAR(20) NOT NULL CHECK (BusType IN ('AC', 'Non-AC', 'Sleeper')),
     TotalSeats INT NOT NULL CHECK (TotalSeats > 0),
     CONSTRAINT fk_bus_operator FOREIGN KEY (OperatorID) REFERENCES OPERATOR(OperatorID) ON DELETE CASCADE
 );
