@@ -5,6 +5,7 @@ require('dotenv').config();
 const authRoutes = require('./src/routes/authRoutes');
 const tripRoutes = require('./src/routes/tripRoutes');
 const busRoutes = require('./src/routes/busRoutes');
+const bookingRoutes = require('./src/routes/bookingRoutes');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/buses', busRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

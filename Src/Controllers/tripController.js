@@ -50,15 +50,7 @@ const getOperatorTrips = async (req, res) => {
     const operatorId = req.user.id;
     try {
         const result = await db.query(
-            `SELECT t.TripID, t.TripDate, t.DepartureTime, t.BaseFare, 
-                    b.BusNumber, b.BusType, 
-                    r.StartPoint, r.EndPoint 
-             FROM TRIP t
-             JOIN BUS b ON t.BusID = b.BusID
-             JOIN ROUTE r ON t.RouteID = r.RouteID
-             WHERE t.OperatorID = $1
-             ORDER BY t.TripDate DESC, t.DepartureTime DESC
-             LIMIT 10`,
+            'SELECT * FROM get_operator_trips($1)',
             [operatorId]
         );
         res.status(200).json(result.rows);
@@ -71,15 +63,14 @@ const getOperatorTrips = async (req, res) => {
 const getOperatorStats = async (req, res) => {
     const operatorId = req.user.id;
     try {
-        const busCount = await db.query('SELECT COUNT(*) FROM BUS WHERE OperatorID = $1', [operatorId]);
-        const tripCount = await db.query('SELECT COUNT(*) FROM TRIP WHERE OperatorID = $1 AND TripDate >= CURRENT_DATE', [operatorId]);
+        const result = await db.query('SELECT * FROM get_operator_stats($1)', [operatorId]);
+        const stats = result.rows[0];
 
-        // Placeholder for revenue/bookings as they require specific logic/tables
         res.status(200).json({
-            totalBuses: parseInt(busCount.rows[0].count),
-            activeTrips: parseInt(tripCount.rows[0].count),
-            todayBookings: 0, // Mock for now
-            todayRevenue: 0   // Mock for now
+            totalBuses: parseInt(stats.total_buses),
+            activeTrips: parseInt(stats.active_trips),
+            todayBookings: 0,
+            todayRevenue: 0
         });
     } catch (err) {
         console.error('Fetch Operator Stats Error:', err);
@@ -89,7 +80,7 @@ const getOperatorStats = async (req, res) => {
 
 const getRoutes = async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM ROUTE ORDER BY StartPoint, EndPoint');
+        const result = await db.query('SELECT * FROM get_all_routes()');
         res.status(200).json(result.rows);
     } catch (err) {
         console.error('Fetch Routes Error:', err);
@@ -97,4 +88,23 @@ const getRoutes = async (req, res) => {
     }
 };
 
-module.exports = { searchTrips, assignTrip, getOperatorTrips, getOperatorStats, getRoutes };
+const getTripDetails = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.query(
+            'SELECT * FROM get_trip_details($1)',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error('Fetch Trip Details Error:', err);
+        res.status(500).json({ error: 'Database error fetching trip details' });
+    }
+};
+
+module.exports = { searchTrips, assignTrip, getOperatorTrips, getOperatorStats, getRoutes, getTripDetails };

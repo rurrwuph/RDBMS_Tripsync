@@ -11,15 +11,13 @@ const addBus = async (req, res) => {
 
     try {
         const result = await db.query(
-            `INSERT INTO BUS (OperatorID, BusNumber, BusType, TotalSeats) 
-             VALUES ($1, $2, $3, $4) RETURNING *`,
+            'CALL add_bus($1, $2, $3, $4, NULL)',
             [operatorId, busNumber, busType, totalSeats]
         );
 
-        const newBus = result.rows[0];
         res.status(201).json({
             message: "Bus registered successfully",
-            bus: newBus,
+            busId: result.rows[0].p_bus_id,
             info: `Database trigger has automatically generated ${totalSeats} seats.`
         });
     } catch (err) {
@@ -44,7 +42,7 @@ const getOperatorBuses = async (req, res) => {
     const operatorId = req.user.id;
     try {
         const result = await db.query(
-            'SELECT * FROM BUS WHERE OperatorID = $1 ORDER BY BusID DESC',
+            'SELECT * FROM get_operator_buses($1)',
             [operatorId]
         );
         res.status(200).json(result.rows);

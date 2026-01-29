@@ -1,4 +1,4 @@
--- Function to get trip details
+--get trip details
 CREATE OR REPLACE FUNCTION get_trip_details(p_trip_id INT)
 RETURNS TABLE (
     TripID INT,
