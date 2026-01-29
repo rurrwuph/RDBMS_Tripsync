@@ -13,7 +13,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
-app.use('/api/bus', busRoutes);
+app.use('/api/buses', busRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

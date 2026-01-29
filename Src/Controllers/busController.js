@@ -23,9 +23,35 @@ const addBus = async (req, res) => {
             info: `Database trigger has automatically generated ${totalSeats} seats.`
         });
     } catch (err) {
-        console.error('Add Bus Error:', err);
-        res.status(500).json({ error: 'Database error during bus addition' });
+        console.error('ADD BUS ERROR FULL:', err);
+
+        let errorMsg = 'Database error during bus addition';
+        if (err.code === '23505') {
+            errorMsg = 'A bus with this number already exists.';
+        } else if (err.code === '23514') {
+            errorMsg = 'Check constraint violation. Please verify bus type or seats.';
+        }
+
+        res.status(500).json({
+            error: errorMsg,
+            details: err.message,
+            code: err.code
+        });
     }
 };
 
-module.exports = { addBus };
+const getOperatorBuses = async (req, res) => {
+    const operatorId = req.user.id;
+    try {
+        const result = await db.query(
+            'SELECT * FROM BUS WHERE OperatorID = $1 ORDER BY BusID DESC',
+            [operatorId]
+        );
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Fetch Operator Buses Error:', err);
+        res.status(500).json({ error: 'Database error fetching buses' });
+    }
+};
+
+module.exports = { addBus, getOperatorBuses };

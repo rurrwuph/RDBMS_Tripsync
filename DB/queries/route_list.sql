@@ -1,0 +1,1 @@
+SELECT * FROM ROUTE ORDER BY StartPoint, EndPoint;
