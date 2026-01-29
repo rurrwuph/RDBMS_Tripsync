@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const bcrypt = require('bcrypt');
 
 const register = async (req, res) => {
 
@@ -9,9 +10,26 @@ const register = async (req, res) => {
     }
 
     try {
-      
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        if (type === 'customer') {
+            await db.query(
+                'CALL register_customer($1, $2, $3, $4)',
+                [name, email, hashedPassword, phone]
+            );
+            return res.status(201).json({ message: 'Customer registered successfully via procedure' });
+        }
+        else if (type === 'operator') {
+            await db.query(
+                'CALL register_operator($1, $2, $3, $4)',
+                [companyName, email, hashedPassword, licenseNumber]
+            );
             return res.status(201).json({ message: 'Operator registered successfully via procedure' });
-        }catch (err) {
+        }
+
+
+    } catch (err) {
         console.error('Registration Error:', err);
 
         if (err.code === '23505') {
