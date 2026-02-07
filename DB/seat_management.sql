@@ -24,6 +24,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS after_bus_insert ON BUS;
 CREATE TRIGGER after_bus_insert
 AFTER INSERT ON BUS
 FOR EACH ROW
@@ -49,6 +50,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_check_seat_availability ON BOOKING;
 CREATE TRIGGER trg_check_seat_availability
 BEFORE INSERT ON BOOKING
 FOR EACH ROW
@@ -57,10 +59,10 @@ EXECUTE FUNCTION tg_prevent_double_booking();
 -- 3
 CREATE OR REPLACE FUNCTION get_trip_seat_map(p_trip_id INT)
 RETURNS TABLE (
-    seat_id INT,
-    seat_number VARCHAR,
-    seat_type VARCHAR,
-    is_booked BOOLEAN
+    seatid INT,
+    seatnumber VARCHAR,
+    seattype VARCHAR,
+    isbooked BOOLEAN
 ) AS $$
 DECLARE
     v_bus_id INT;
@@ -69,15 +71,15 @@ BEGIN
 
     RETURN QUERY
     SELECT 
-        s.SeatID, 
-        s.SeatNumber, 
-        s.SeatType, 
+        s.SeatID as seatid, 
+        s.SeatNumber as seatnumber, 
+        s.SeatType as seattype, 
         CASE 
             WHEN b.BookingID IS NOT NULL AND b.BookingStatus = 'Confirmed' THEN true 
             ELSE false 
-        END
+        END as isbooked
     FROM SEAT s
-    LEFT JOIN BOOKING b ON s.SeatID = b.SeatID AND b.TripID = p_trip_id
+    LEFT JOIN BOOKING b ON s.SeatID = b.SeatID AND b.TripID = p_trip_id --to see even if the seat is empty
     WHERE s.BusID = v_bus_id
     ORDER BY CAST(SUBSTRING(s.SeatNumber FROM '[0-9]+') AS INT);
 END;

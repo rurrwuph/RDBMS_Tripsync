@@ -1,6 +1,4 @@
--- Procedure for TRIP ASSIGNMENT
--- Assign Trip
--- Validates if the operator owns the bus before assigning
+-- assign Trip
 CREATE OR REPLACE PROCEDURE assign_trip(
     p_operator_id INT,
     p_route_id INT,
@@ -12,7 +10,7 @@ CREATE OR REPLACE PROCEDURE assign_trip(
 DECLARE
     v_owner_id INT;
 BEGIN
-    -- Check if operator owns the bus
+    -- check if operator owns bus
     SELECT OperatorID INTO v_owner_id FROM BUS WHERE BusID = p_bus_id;
     
     IF v_owner_id IS NULL OR v_owner_id <> p_operator_id THEN

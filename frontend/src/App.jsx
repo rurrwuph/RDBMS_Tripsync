@@ -23,7 +23,7 @@ function App() {
           <Route path="operator/buses" element={<BusManagement />} />
           <Route path="operator/assign-trip" element={<AssignTrip />} />
           <Route path="booking/:tripId" element={<Booking />} />
-          {/* Add more routes here */}
+          {/* */}
         </Route>
       </Routes>
     </BrowserRouter>

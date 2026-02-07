@@ -69,8 +69,8 @@ const getOperatorStats = async (req, res) => {
         res.status(200).json({
             totalBuses: parseInt(stats.total_buses),
             activeTrips: parseInt(stats.active_trips),
-            todayBookings: 0,
-            todayRevenue: 0
+            todayBookings: parseInt(stats.today_bookings),
+            todayRevenue: parseFloat(stats.today_revenue)
         });
     } catch (err) {
         console.error('Fetch Operator Stats Error:', err);

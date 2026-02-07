@@ -8,6 +8,10 @@ const pool = new Pool({
   }
 });
 
+// Handle unexpected errors on idle database clients
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle database client', err);
+});
 
 const testDb = async () => {
   try {

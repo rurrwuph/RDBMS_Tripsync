@@ -1,4 +1,4 @@
---create booking
+-- Procedure to create a booking
 CREATE OR REPLACE PROCEDURE create_booking(
     p_customer_id INT,
     p_trip_id INT,
