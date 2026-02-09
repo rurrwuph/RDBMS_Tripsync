@@ -1,5 +1,4 @@
 -- 1. OPERATOR Table
--- One record = One Company + One Admin. Admin logs in with CompanyName + AdminEmail.
 CREATE TABLE OPERATOR (
     OperatorID SERIAL PRIMARY KEY,
     CompanyName VARCHAR(100) UNIQUE NOT NULL, 
@@ -10,7 +9,6 @@ CREATE TABLE OPERATOR (
 );
 
 -- 2. CUSTOMER Table
--- Standard passengers who book tickets.
 CREATE TABLE CUSTOMER (
     CustomerID SERIAL PRIMARY KEY,
     FullName VARCHAR(100) NOT NULL,
@@ -48,7 +46,6 @@ CREATE TABLE ROUTE (
 );
 
 -- 6. TRIP Table
--- Scheduled by the specific Operator Admin.
 CREATE TABLE TRIP (
     TripID SERIAL PRIMARY KEY,
     OperatorID INT NOT NULL,
@@ -68,36 +65,43 @@ CREATE TABLE BOOKING (
     CustomerID INT NOT NULL,
     TripID INT NOT NULL,
     SeatID INT NOT NULL,
+    PaymentID INT, 
     BookingTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    BookingStatus VARCHAR(20) DEFAULT 'Confirmed' CHECK (BookingStatus IN ('Confirmed', 'Cancelled')),
+    BookingStatus VARCHAR(20) DEFAULT 'Pending' 
+        CHECK (BookingStatus IN ('Pending', 'Confirmed', 'Cancelled')),
+
     CONSTRAINT fk_booking_customer FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID) ON DELETE CASCADE,
     CONSTRAINT fk_booking_trip FOREIGN KEY (TripID) REFERENCES TRIP(TripID) ON DELETE CASCADE,
     CONSTRAINT fk_booking_seat FOREIGN KEY (SeatID) REFERENCES SEAT(SeatID) ON DELETE CASCADE,
+    CONSTRAINT fk_booking_payment FOREIGN KEY (PaymentID) REFERENCES PAYMENT(PaymentID) ON DELETE SET NULL,
     CONSTRAINT uq_trip_seat_booking UNIQUE (TripID, SeatID)
 );
 
--- 8. PAYMENT Table
+-- 8. PAYMENT Table 
 CREATE TABLE PAYMENT (
     PaymentID SERIAL PRIMARY KEY,
-    BookingID INT NOT NULL,
+    BookingID INT NOT NULL, 
     Amount DECIMAL(10, 2) NOT NULL CHECK (Amount >= 0),
     PaymentMethod VARCHAR(50) NOT NULL,
+    -- Added status to track the lifecycle of the money
+    PaymentStatus VARCHAR(20) DEFAULT 'Completed' CHECK (PaymentStatus IN ('Completed', 'Partially Refunded', 'Fully Refunded')),
     PaymentTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_payment_booking FOREIGN KEY (BookingID) REFERENCES BOOKING(BookingID) ON DELETE CASCADE
 );
 
--- 9. REFUND Table
+-- 9. REFUND Table 
 CREATE TABLE REFUND (
     RefundID SERIAL PRIMARY KEY,
     PaymentID INT NOT NULL,
+    BookingID INT NOT NULL, 
     RefundAmount DECIMAL(10, 2) NOT NULL CHECK (RefundAmount >= 0),
     Status VARCHAR(20) DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Approved', 'Rejected')),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_refund_payment FOREIGN KEY (PaymentID) REFERENCES PAYMENT(PaymentID) ON DELETE CASCADE
+    CONSTRAINT fk_refund_payment FOREIGN KEY (PaymentID) REFERENCES PAYMENT(PaymentID) ON DELETE CASCADE,
+    CONSTRAINT fk_refund_booking FOREIGN KEY (BookingID) REFERENCES BOOKING(BookingID) ON DELETE CASCADE
 );
 
 -- 10. COMPLAINT Table
--- Logged by Customers against a specific booking or general issue.
 CREATE TABLE COMPLAINT (
     ComplaintID SERIAL PRIMARY KEY,
     CustomerID INT NOT NULL,
@@ -111,11 +115,10 @@ CREATE TABLE COMPLAINT (
 );
 
 -- 11. COMPLAINT_ACTIONS Table
--- Resolved by the Operator Admin.
 CREATE TABLE COMPLAINT_ACTIONS (
     ActionID SERIAL PRIMARY KEY,
     ComplaintID INT NOT NULL,
-    OperatorID INT NOT NULL, -- The Admin performing the action
+    OperatorID INT NOT NULL, 
     ActionTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ActionDescription TEXT NOT NULL,
     CONSTRAINT fk_action_complaint FOREIGN KEY (ComplaintID) REFERENCES COMPLAINT(ComplaintID) ON DELETE CASCADE,
