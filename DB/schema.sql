@@ -68,7 +68,7 @@ CREATE TABLE BOOKING (
     PaymentID INT, 
     BookingTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     BookingStatus VARCHAR(20) DEFAULT 'Pending' 
-        CHECK (BookingStatus IN ('Pending', 'Confirmed', 'Cancelled')),
+        CHECK (BookingStatus IN ('Pending', 'Confirmed', 'Cancelled', 'RefundRequested')),
 
     CONSTRAINT fk_booking_customer FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID) ON DELETE CASCADE,
     CONSTRAINT fk_booking_trip FOREIGN KEY (TripID) REFERENCES TRIP(TripID) ON DELETE CASCADE,

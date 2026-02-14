@@ -19,3 +19,10 @@ ALTER TABLE BOOKING ADD COLUMN PaymentID INT;
 ALTER TABLE BOOKING 
 ADD CONSTRAINT fk_booking_payment 
 FOREIGN KEY (PaymentID) REFERENCES PAYMENT(PaymentID) ON DELETE SET NULL;
+
+
+
+ALTER TABLE BOOKING DROP CONSTRAINT IF EXISTS booking_status_check;
+
+ALTER TABLE BOOKING ADD CONSTRAINT booking_status_check 
+CHECK (BookingStatus IN ('Pending', 'Confirmed', 'Cancelled', 'RefundRequested'));
