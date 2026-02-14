@@ -9,6 +9,7 @@ import OperatorDashboard from './pages/OperatorDashboard';
 import BusManagement from './pages/BusManagement';
 import AssignTrip from './pages/AssignTrip';
 import Booking from './pages/Booking';
+import Payment from './pages/Payment';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="operator/buses" element={<BusManagement />} />
           <Route path="operator/assign-trip" element={<AssignTrip />} />
           <Route path="booking/:tripId" element={<Booking />} />
+          <Route path="payment" element={<Payment />} />
           {/* */}
         </Route>
       </Routes>
