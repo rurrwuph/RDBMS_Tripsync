@@ -32,18 +32,16 @@ EXECUTE FUNCTION tg_create_bus_seats();
 
 
 -- 2. Trigger Function to prevent double booking
-
 CREATE OR REPLACE FUNCTION tg_prevent_double_booking()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Check if seat is already occupied for this trip
     IF EXISTS (
         SELECT 1 FROM BOOKING 
         WHERE TripID = NEW.TripID 
         AND SeatID = NEW.SeatID 
-        AND BookingStatus = 'Confirmed'
+        AND BookingStatus IN ('Confirmed', 'Pending', 'RefundRequested') 
     ) THEN
-        RAISE EXCEPTION 'Constraint Violation: Seat % is already taken for Trip %', NEW.SeatID, NEW.TripID;
+        RAISE EXCEPTION 'Constraint Violation: Seat % is already taken or reserved for Trip %', NEW.SeatID, NEW.TripID;
     END IF;
 
     RETURN NEW;
@@ -75,11 +73,11 @@ BEGIN
         s.SeatNumber as seatnumber, 
         s.SeatType as seattype, 
         CASE 
-            WHEN b.BookingID IS NOT NULL AND b.BookingStatus = 'Confirmed' THEN true 
+            WHEN b.BookingID IS NOT NULL AND b.BookingStatus IN ('Confirmed', 'Pending') THEN true 
             ELSE false 
         END as isbooked
     FROM SEAT s
-    LEFT JOIN BOOKING b ON s.SeatID = b.SeatID AND b.TripID = p_trip_id --to see even if the seat is empty
+    LEFT JOIN BOOKING b ON s.SeatID = b.SeatID AND b.TripID = p_trip_id AND b.BookingStatus != 'Cancelled' --to see even if the seat is empty
     WHERE s.BusID = v_bus_id
     ORDER BY CAST(SUBSTRING(s.SeatNumber FROM '[0-9]+') AS INT);
 END;
