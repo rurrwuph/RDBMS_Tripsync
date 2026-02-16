@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -19,7 +19,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('/api/auth/login', {
+            const response = await api.post('/auth/login', {
                 email: formData.email,
                 password: formData.password,
                 type: formData.role

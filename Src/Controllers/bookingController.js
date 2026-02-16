@@ -17,11 +17,14 @@ const createBooking = async (req, res) => {
     }
 
     try {
+        console.log(`[BOOKING] Attempting to create booking for customer ${customerId}, trip ${tripId}, seats ${seatArray}`);
+        console.log(`[BOOKING] Attempting to book seat(s) ${seatArray} for Trip ${tripId}`);
         const result = await db.query(
             'CALL create_booking_bulk($1, $2, $3, NULL)',
             [customerId, tripId, seatArray]
         );
 
+        console.log('Booking Result Rows:', result.rows);
         const createdIds = result.rows[0].p_booking_ids;
 
         res.status(201).json({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Armchair, ChevronLeft, CreditCard, Info, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const Booking = () => {
     const navigate = useNavigate();
@@ -14,13 +14,15 @@ const Booking = () => {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [bookingSuccess, setBookingSuccess] = useState(false);
 
+    const [newBookingIds, setNewBookingIds] = useState([]);
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
                 const [tripRes, seatsRes] = await Promise.all([
-                    axios.get(`/api/trips/${tripId}`),
-                    axios.get(`/api/bookings/seats/${tripId}`)
+                    api.get(`/trips/${tripId}`),
+                    api.get(`/bookings/seats/${tripId}`)
                 ]);
                 setTrip(tripRes.data);
                 setSeats(seatsRes.data);
@@ -59,12 +61,11 @@ const Booking = () => {
 
         setBookingLoading(true);
         try {
-            for (const seat of selectedSeats) {
-                await axios.post('/api/bookings/book',
-                    { tripId: parseInt(tripId), seatId: seat.seatid },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-            }
+            const seatIds = selectedSeats.map(s => s.seatid);
+            await api.post('/bookings/book', {
+                tripId: parseInt(tripId),
+                seatId: seatIds
+            });
             setBookingSuccess(true);
         } catch (err) {
             alert(err.response?.data?.error || "Booking failed.");

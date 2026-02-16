@@ -10,14 +10,16 @@ const addBus = async (req, res) => {
     }
 
     try {
+        console.log(`[BUS] Attempting to add bus: ${busNumber} (${busType})`);
         const result = await db.query(
             'CALL add_bus($1, $2, $3, $4, NULL)',
             [operatorId, busNumber, busType, totalSeats]
         );
 
+        console.log('Add Bus Result Rows:', result.rows);
         res.status(201).json({
             message: "Bus registered successfully",
-            busId: result.rows[0].p_bus_id,
+            busId: result.rows[0]?.p_bus_id,
             info: `Database trigger has automatically generated ${totalSeats} seats.`
         });
     } catch (err) {

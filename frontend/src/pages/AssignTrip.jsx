@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Bus, ChevronLeft, Send, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Bus, Plus, Trash2, ChevronLeft, AlertCircle, Send } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 
 const AssignTrip = () => {
     const navigate = useNavigate();
@@ -25,8 +25,8 @@ const AssignTrip = () => {
         const fetchData = async () => {
             try {
                 const [busRes, routeRes] = await Promise.all([
-                    axios.get('/api/buses/operator-list', config),
-                    axios.get('/api/trips/routes')
+                    api.get('/buses/operator-list'),
+                    api.get('/trips/routes')
                 ]);
                 setBuses(busRes.data);
                 setRoutes(routeRes.data);
@@ -43,7 +43,7 @@ const AssignTrip = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await axios.post('/api/trips/assign', formData, config);
+            await api.post('/trips/assign', formData);
             setMessage({ type: 'success', text: 'Trip assigned successfully!' });
             setTimeout(() => navigate('/operator'), 2000);
         } catch (err) {

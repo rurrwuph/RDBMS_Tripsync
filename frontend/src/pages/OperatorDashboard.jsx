@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Bus, Map, Settings, Plus, Users, ArrowUpRight, Calendar, ChevronRight } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const OperatorDashboard = () => {
     const navigate = useNavigate();
@@ -22,15 +22,10 @@ const OperatorDashboard = () => {
         }
 
         const fetchDashboardData = async () => {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: { Authorization: `Bearer ${token}` }
-            };
-
             try {
                 const [statsRes, tripsRes] = await Promise.all([
-                    axios.get('/api/trips/operator-stats', config),
-                    axios.get('/api/trips/operator-trips', config)
+                    api.get('/trips/operator-stats'),
+                    api.get('/trips/operator-trips')
                 ]);
                 setStats(statsRes.data);
                 setTrips(tripsRes.data);

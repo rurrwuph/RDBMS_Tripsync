@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Phone, ShieldCheck, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -23,7 +23,7 @@ const Register = () => {
         setLoading(true);
 
         try {
-            await axios.post('/api/auth/register', {
+            await api.post('/auth/register', {
                 ...formData,
                 type: role,
                 name: formData.fullName
