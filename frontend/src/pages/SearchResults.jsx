@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Bus, Clock, MapPin, Tag, ChevronRight, Filter, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import { Bus, Clock, MapPin, Tag, ChevronRight, Filter, AlertCircle, Calendar, Search, X } from 'lucide-react';
+import api from '../utils/api';
 
 const SearchResults = () => {
     const [searchParams] = useSearchParams();
@@ -17,7 +17,7 @@ const SearchResults = () => {
         const fetchTrips = async () => {
             setLoading(true);
             try {
-                const response = await axios.get(`/api/trips/search?start=${from}&end=${to}&date=${date}`);
+                const response = await api.get(`/trips/search?start=${from}&end=${to}&date=${date}`);
                 setTrips(response.data.trips || []);
                 setError(null);
             } catch (err) {
