@@ -84,3 +84,37 @@ BEGIN
     RETURNING BusID INTO p_bus_id;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE PROCEDURE approve_refund(
+    p_booking_id INT,
+    p_decision BOOLEAN 
+) AS $$
+DECLARE
+    v_payment_id INT;
+    v_current_status VARCHAR;
+BEGIN
+    SELECT BookingStatus, PaymentID INTO v_current_status, v_payment_id
+    FROM BOOKING
+    WHERE BookingID = p_booking_id;
+
+    IF v_current_status IS NULL OR v_current_status != 'RefundRequested' THEN
+        RAISE EXCEPTION 'Booking % is not in a RefundRequested state.', p_booking_id;
+    END IF;
+
+    IF p_decision = TRUE THEN
+        UPDATE BOOKING 
+        SET BookingStatus = 'Cancelled' 
+        WHERE BookingID = p_booking_id;
+
+        UPDATE PAYMENT 
+        SET PaymentStatus = 'Fully Refunded' 
+        WHERE PaymentID = v_payment_id;
+        
+    ELSE
+        UPDATE BOOKING 
+        SET BookingStatus = 'Confirmed' 
+        WHERE BookingID = p_booking_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
