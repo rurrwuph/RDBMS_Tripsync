@@ -17,14 +17,11 @@ const createBooking = async (req, res) => {
     }
 
     try {
-        console.log(`[BOOKING] Attempting to create booking for customer ${customerId}, trip ${tripId}, seats ${seatArray}`);
-        console.log(`[BOOKING] Attempting to book seat(s) ${seatArray} for Trip ${tripId}`);
         const result = await db.query(
             'CALL create_booking_bulk($1, $2, $3, NULL)',
             [customerId, tripId, seatArray]
         );
 
-        console.log('Booking Result Rows:', result.rows);
         const createdIds = result.rows[0].p_booking_ids;
 
         res.status(201).json({
@@ -105,4 +102,31 @@ const processRefundReview = async (req, res) => {
     }
 };
 
-module.exports = { createBooking, getTripSeats, handleCancellationRequest, processRefundReview };
+const getPendingOperatorActions = async (req, res) => {
+    const operatorId = req.user.id;
+    try {
+        const result = await db.query(`
+            SELECT 
+                b.BookingID as bookingid,
+                b.PaymentID as paymentid,
+                u.Name as customername,
+                STRING_AGG(s.SeatNumber, ', ') as seatnumbers,
+                b.BookingStatus as status
+            FROM BOOKING b
+            JOIN TRIP t ON b.TripID = t.TripID
+            JOIN "USER" u ON b.CustomerID = u.UserID
+            JOIN SEAT s ON b.BookingID = s.BookingID
+            WHERE t.OperatorID = $1
+            AND b.BookingStatus IN ('Pending', 'RefundRequested')
+            GROUP BY b.BookingID, b.PaymentID, u.Name, b.BookingStatus
+            ORDER BY b.BookingID DESC
+        `, [operatorId]);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Fetch Pending Actions Error:', err);
+        res.status(500).json({ error: "Internal server error fetching pending actions." });
+    }
+};
+
+module.exports = { createBooking, getTripSeats, handleCancellationRequest, processRefundReview, getPendingOperatorActions };
