@@ -107,19 +107,20 @@ const getPendingOperatorActions = async (req, res) => {
     try {
         const result = await db.query(`
             SELECT 
-                b.BookingID as bookingid,
+                b.TripID as tripid,
+                STRING_AGG(b.BookingID::text, ', ') as bookingids,
                 b.PaymentID as paymentid,
-                u.Name as customername,
+                c.FullName as customername,
                 STRING_AGG(s.SeatNumber, ', ') as seatnumbers,
                 b.BookingStatus as status
             FROM BOOKING b
             JOIN TRIP t ON b.TripID = t.TripID
-            JOIN "USER" u ON b.CustomerID = u.UserID
-            JOIN SEAT s ON b.BookingID = s.BookingID
+            JOIN CUSTOMER c ON b.CustomerID = c.CustomerID
+            JOIN SEAT s ON b.SeatID = s.SeatID
             WHERE t.OperatorID = $1
             AND b.BookingStatus IN ('Pending', 'RefundRequested')
-            GROUP BY b.BookingID, b.PaymentID, u.Name, b.BookingStatus
-            ORDER BY b.BookingID DESC
+            GROUP BY b.TripID, b.PaymentID, c.FullName, b.BookingStatus, b.BookingTime
+            ORDER BY b.BookingTime DESC
         `, [operatorId]);
 
         res.status(200).json(result.rows);
@@ -128,5 +129,34 @@ const getPendingOperatorActions = async (req, res) => {
         res.status(500).json({ error: "Internal server error fetching pending actions." });
     }
 };
+
+// const updateBookingStatus = async (req, res) => {
+//     const { bookingId } = req.params;
+//     const { status } = req.body;
+//     const operatorId = req.user.id;
+
+//     try {
+//         if (status === 'Confirmed') {
+//             // For regular pending bookings being confirmed by operator
+//             await db.query(
+//                 'UPDATE BOOKING SET BookingStatus = $1 WHERE BookingID = $2',
+//                 [status, bookingId]
+//             );
+//         } else if (status === 'Refunded' || status === 'Cancelled') {
+//             // Re-using the logic from approve_refund but for general status updates
+//             await db.query('CALL approve_refund($1, $2)', [bookingId, true]);
+//         } else if (status === 'Paid') {
+//             await db.query(
+//                 'UPDATE BOOKING SET BookingStatus = $1 WHERE BookingID = $2',
+//                 [status, bookingId]
+//             );
+//         }
+
+//         res.status(200).json({ success: true, message: `Booking status updated to ${status}` });
+//     } catch (err) {
+//         console.error('Update Booking Status Error:', err);
+//         res.status(500).json({ error: err.message || "Failed to update booking status." });
+//     }
+// };
 
 module.exports = { createBooking, getTripSeats, handleCancellationRequest, processRefundReview, getPendingOperatorActions };

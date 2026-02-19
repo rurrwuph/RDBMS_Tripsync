@@ -62,10 +62,13 @@ const Booking = () => {
         setBookingLoading(true);
         try {
             const seatIds = selectedSeats.map(s => s.seatid);
-            await api.post('/bookings/book', {
+            const res = await api.post('/bookings/book', {
                 tripId: parseInt(tripId),
                 seatId: seatIds
             });
+
+            // The API returns { message, bookingId: [id1, id2, ...] }
+            setNewBookingIds(res.data.bookingId);
             setBookingSuccess(true);
         } catch (err) {
             alert(err.response?.data?.error || "Booking failed.");
@@ -73,6 +76,9 @@ const Booking = () => {
             setBookingLoading(false);
         }
     };
+
+    const basePrice = trip ? parseFloat(trip.basefare) : 0;
+    const totalPrice = selectedSeats.length * basePrice;
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-40 space-y-4">
@@ -97,18 +103,26 @@ const Booking = () => {
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
                 <CheckCircle2 size={48} />
             </div>
-            <h2 className="text-3xl font-black text-gray-900 mb-4">Booking Confirmed!</h2>
+            <h2 className="text-3xl font-black text-gray-900 mb-4">Seats Reserved!</h2>
             <p className="text-gray-600 mb-8 leading-relaxed">
-                Pack your bags! Your seats <span className="font-bold text-indigo-600">{selectedSeats.map(s => s.seatnumber).join(', ')}</span> have been successfully reserved for the trip to <span className="font-bold">{trip?.endpoint}</span>.
+                Your seats <span className="font-bold text-indigo-600">{selectedSeats.map(s => s.seatnumber).join(', ')}</span> have been temporarily reserved. Please complete the payment to confirm your booking.
             </p>
-            <button onClick={() => navigate('/')} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-indigo-600 transition-all">
-                Return to Home
-            </button>
+            <div className="flex flex-col gap-4">
+                <button
+                    onClick={() => navigate('/payment', { state: { bookingIds: newBookingIds, trip, selectedSeats, totalPrice } })}
+                    className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                >
+                    Proceed to Payment <CreditCard size={20} />
+                </button>
+                <button onClick={() => navigate('/')} className="w-full bg-gray-100 text-gray-600 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all">
+                    Finish Later
+                </button>
+            </div>
         </div>
     );
 
-    const basePrice = trip ? parseFloat(trip.basefare) : 0;
-    const totalPrice = selectedSeats.length * basePrice;
+    // Price calculations moved up
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">

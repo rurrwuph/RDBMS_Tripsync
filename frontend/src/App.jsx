@@ -10,6 +10,7 @@ import BusManagement from './pages/BusManagement';
 import AssignTrip from './pages/AssignTrip';
 import Booking from './pages/Booking';
 import Payment from './pages/Payment';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="operator/assign-trip" element={<AssignTrip />} />
           <Route path="booking/:tripId" element={<Booking />} />
           <Route path="payment" element={<Payment />} />
+          <Route path="profile" element={<Profile />} />
           {/* */}
         </Route>
       </Routes>

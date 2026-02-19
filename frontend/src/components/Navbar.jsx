@@ -31,7 +31,12 @@ const Navbar = () => {
                                     <Link to="/operator" className="text-gray-600 hover:text-indigo-600 font-medium text-blue-100">Operator Dashboard</Link>
                                 )}
                                 <div className="flex items-center gap-3 ml-4 pl-4 border-l">
-                                    <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                                    <Link to="/profile" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                            <User size={16} />
+                                        </div>
+                                        <span>{user.name}</span>
+                                    </Link>
                                     <button
                                         onClick={handleLogout}
                                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"

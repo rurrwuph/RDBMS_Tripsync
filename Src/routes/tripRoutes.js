@@ -8,8 +8,8 @@ const { verifOperator } = require('../middleware/authMiddleware');
 router.get('/search', searchTrips);
 router.get('/routes', getRoutes);
 router.post('/assign', verifOperator, assignTrip);
-router.get('/operator-trips', verifOperator, getOperatorTrips);
 router.get('/operator-stats', verifOperator, getOperatorStats);
+router.get('/operator-trips', verifOperator, getOperatorTrips);
 router.get('/:id', getTripDetails);
 
 module.exports = router;

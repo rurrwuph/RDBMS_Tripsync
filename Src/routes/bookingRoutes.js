@@ -6,7 +6,8 @@ const { verifCustomer, verifOperator } = require('../middleware/authMiddleware')
 router.get('/seats/:tripId', getTripSeats);
 router.post('/book', verifCustomer, createBooking);
 router.post('/cancel', verifCustomer, handleCancellationRequest);
-router.get('/operator/pending-actions', verifOperator, getPendingOperatorActions);
-router.post('/review-refund', verifOperator, processRefundReview);
+// router.get('/operator/pending-actions', verifOperator, getPendingOperatorActions);
+router.put('/:bookingId/status', verifOperator, processRefundReview);
+// router.post('/review-refund', verifOperator, processRefundReview);
 
 module.exports = router;

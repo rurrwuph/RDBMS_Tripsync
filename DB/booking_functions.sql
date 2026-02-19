@@ -48,3 +48,34 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW v_customer_bookings AS
+SELECT 
+    b.CustomerID,
+    STRING_AGG(b.BookingID::text, ', ' ORDER BY b.BookingID) as booking_list,
+    b.BookingStatus as status, 
+    b.BookingTime as bookingtime,
+    t.TripDate as tripdate, 
+    t.DepartureTime as departuretime,
+    r.StartPoint as startpoint, 
+    r.EndPoint as endpoint,
+    bus.BusNumber as busnumber, 
+    bus.BusType as bustype,
+    STRING_AGG(s.SeatNumber, ', ' ORDER BY s.SeatNumber) as seatnumbers,
+    SUM(t.BaseFare) as totalfare
+FROM BOOKING b
+JOIN TRIP t ON b.TripID = t.TripID
+JOIN ROUTE r ON t.RouteID = r.RouteID
+JOIN BUS bus ON t.BusID = bus.BusID
+JOIN SEAT s ON b.SeatID = s.SeatID
+GROUP BY 
+    b.CustomerID, 
+    b.TripID, 
+    b.BookingStatus, 
+    b.BookingTime, 
+    t.TripDate, 
+    t.DepartureTime, 
+    r.StartPoint, 
+    r.EndPoint, 
+    bus.BusNumber, 
+    bus.BusType;

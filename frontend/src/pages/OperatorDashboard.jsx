@@ -13,31 +13,32 @@ const OperatorDashboard = () => {
         todayRevenue: 0
     });
     const [trips, setTrips] = useState([]);
+    const [pendingRequests, setPendingRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const fetchDashboardData = async () => {
+        if (!user) return;
+        try {
+            const [statsRes, tripsRes] = await Promise.all([
+                api.get('/trips/operator-stats'),
+                api.get('/trips/operator-trips')
+            ]);
+            setStats(statsRes.data);
+            setTrips(tripsRes.data);
+        } catch (err) {
+            console.error('Error fetching dashboard data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!user || user.role !== 'operator') {
             navigate('/login');
             return;
         }
-
-        const fetchDashboardData = async () => {
-            try {
-                const [statsRes, tripsRes] = await Promise.all([
-                    api.get('/trips/operator-stats'),
-                    api.get('/trips/operator-trips')
-                ]);
-                setStats(statsRes.data);
-                setTrips(tripsRes.data);
-            } catch (err) {
-                console.error('Error fetching dashboard data:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchDashboardData();
-    }, [user, navigate]);
+    }, [navigate]);
 
     if (!user) return null;
 
