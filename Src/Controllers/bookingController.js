@@ -85,20 +85,37 @@ const handleCancellationRequest = async (req, res) => {
 };
 
 
-const processRefundReview = async (req, res) => {
-    const { bookingId, decision } = req.body;
+const getOperatorRefunds = async (req, res) => {
+    const operatorId = req.user.id;
+    try {
+        const result = await db.query(`
+            SELECT * FROM v_operator_refunds 
+            WHERE operatorid = $1 
+            ORDER BY requestedat DESC
+        `, [operatorId]);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Fetch Refunds Error:', err);
+        res.status(500).json({ error: "Failed to fetch refund requests." });
+    }
+};
+
+const processRefundDecision = async (req, res) => {
+    const { refundId, decision } = req.body; // decision: 'Approved' or 'Rejected'
     const operatorId = req.user.id;
 
     try {
-        await db.query('CALL approve_refund($1, $2)', [bookingId, decision]);
+        // Procedure: handle_refund_decision(p_refund_id, p_operator_id, p_decision)
+        await db.query('CALL handle_refund_decision($1, $2, $3)', [refundId, operatorId, decision]);
 
         res.status(200).json({
             success: true,
-            message: decision ? "Refund approved and ticket cancelled." : "Refund rejected."
+            message: `Refund request ${decision.toLowerCase()} successfully.`
         });
-    } catch (error) {
-        console.error('Review Error:', error);
-        res.status(500).json({ error: error.message || "Failed to process review." });
+    } catch (err) {
+        console.error('Refund Decision Error:', err);
+        res.status(500).json({ error: err.message || "Failed to process refund decision." });
     }
 };
 
@@ -130,33 +147,11 @@ const getPendingOperatorActions = async (req, res) => {
     }
 };
 
-// const updateBookingStatus = async (req, res) => {
-//     const { bookingId } = req.params;
-//     const { status } = req.body;
-//     const operatorId = req.user.id;
-
-//     try {
-//         if (status === 'Confirmed') {
-//             // For regular pending bookings being confirmed by operator
-//             await db.query(
-//                 'UPDATE BOOKING SET BookingStatus = $1 WHERE BookingID = $2',
-//                 [status, bookingId]
-//             );
-//         } else if (status === 'Refunded' || status === 'Cancelled') {
-//             // Re-using the logic from approve_refund but for general status updates
-//             await db.query('CALL approve_refund($1, $2)', [bookingId, true]);
-//         } else if (status === 'Paid') {
-//             await db.query(
-//                 'UPDATE BOOKING SET BookingStatus = $1 WHERE BookingID = $2',
-//                 [status, bookingId]
-//             );
-//         }
-
-//         res.status(200).json({ success: true, message: `Booking status updated to ${status}` });
-//     } catch (err) {
-//         console.error('Update Booking Status Error:', err);
-//         res.status(500).json({ error: err.message || "Failed to update booking status." });
-//     }
-// };
-
-module.exports = { createBooking, getTripSeats, handleCancellationRequest, processRefundReview, getPendingOperatorActions };
+module.exports = {
+    createBooking,
+    getTripSeats,
+    handleCancellationRequest,
+    getPendingOperatorActions,
+    getOperatorRefunds,
+    processRefundDecision
+};
