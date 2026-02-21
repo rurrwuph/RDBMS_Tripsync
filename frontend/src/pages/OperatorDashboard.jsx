@@ -19,16 +19,29 @@ const OperatorDashboard = () => {
     const fetchDashboardData = async () => {
         if (!user) return;
         try {
-            const [statsRes, tripsRes] = await Promise.all([
+            const [statsRes, tripsRes, refundsRes] = await Promise.all([
                 api.get('/trips/operator-stats'),
-                api.get('/trips/operator-trips')
+                api.get('/trips/operator-trips'),
+                api.get('/bookings/operator/refund-requests')
             ]);
             setStats(statsRes.data);
             setTrips(tripsRes.data);
+            setPendingRequests(refundsRes.data);
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRefundAction = async (refundId, decision) => {
+        if (!window.confirm(`Are you sure you want to ${decision.toLowerCase()} this refund?`)) return;
+        try {
+            await api.post('/bookings/operator/process-refund', { refundId, decision });
+            alert(`Refund ${decision.toLowerCase()} successfully.`);
+            fetchDashboardData();
+        } catch (err) {
+            alert(err.response?.data?.error || "Failed to process refund.");
         }
     };
 
@@ -99,7 +112,8 @@ const OperatorDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-12">
+                    {/* Recent Trips */}
                     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
                             <h3 className="font-bold text-gray-900">Recent Trip Assignments</h3>
@@ -140,6 +154,64 @@ const OperatorDashboard = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <button className="text-indigo-600 font-bold text-sm">Manage</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Pending Refunds */}
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-rose-50/30">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                <Plus size={18} className="text-rose-500" /> Pending Refund Requests
+                            </h3>
+                        </div>
+                        <div className="p-0">
+                            {loading ? (
+                                <div className="p-12 text-center text-gray-500">Loading requests...</div>
+                            ) : pendingRequests.length === 0 ? (
+                                <div className="p-12 text-center text-gray-400">No pending refund requests.</div>
+                            ) : (
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50/50 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Customer</th>
+                                            <th className="px-6 py-4">Trip Info</th>
+                                            <th className="px-6 py-4">Amount</th>
+                                            <th className="px-6 py-4">Decision</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {pendingRequests.filter(r => r.refundstatus === 'Pending').map(req => (
+                                            <tr key={req.refundid} className="hover:bg-rose-50/10 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <p className="font-bold text-gray-900">{req.customername}</p>
+                                                    <p className="text-[10px] text-gray-400 font-black tracking-widest uppercase">ID: {req.bookingid}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-semibold">{req.startpoint} → {req.endpoint}</p>
+                                                    <p className="text-xs text-gray-500">{new Date(req.tripdate).toLocaleDateString()} Seat: {req.seatnumber}</p>
+                                                </td>
+                                                <td className="px-6 py-4 font-black text-rose-600">৳{req.amount}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleRefundAction(req.refundid, 'Approved')}
+                                                            className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-all"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRefundAction(req.refundid, 'Rejected')}
+                                                            className="px-3 py-1.5 bg-rose-500 text-white text-xs font-bold rounded-lg hover:bg-rose-600 transition-all"
+                                                        >
+                                                            Reject
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
