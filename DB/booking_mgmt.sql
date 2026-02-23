@@ -24,7 +24,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 2. Cleanup "Ghost Seats" (Pending bookings older than 10 mins)
--- Uses a CURSOR to iterate through expired pending bookings
 CREATE OR REPLACE FUNCTION cleanup_expired_bookings() 
 RETURNS VOID AS $$
 DECLARE
@@ -38,12 +37,9 @@ BEGIN
     LOOP
         FETCH booking_cursor INTO rec;
         EXIT WHEN NOT FOUND;
-        
-        -- Cancel the booking to release the seat
         UPDATE BOOKING 
         SET BookingStatus = 'Cancelled' 
         WHERE BookingID = rec.BookingID;
-        
         RAISE NOTICE 'Expired booking % has been auto-cancelled.', rec.BookingID;
     END LOOP;
     CLOSE booking_cursor;

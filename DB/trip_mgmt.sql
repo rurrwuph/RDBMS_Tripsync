@@ -113,3 +113,59 @@ BEGIN
     LIMIT 50;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 6. Archive Past Trips (Using Cursor)
+CREATE OR REPLACE FUNCTION archive_past_trips() 
+RETURNS VOID AS $$
+DECLARE
+    trip_cursor CURSOR FOR 
+        SELECT * FROM TRIP 
+        WHERE (TripDate < CURRENT_DATE) 
+           OR (TripDate = CURRENT_DATE AND DepartureTime < CURRENT_TIME);
+    rec TRIP%ROWTYPE;
+BEGIN
+    OPEN trip_cursor;
+    LOOP
+        FETCH trip_cursor INTO rec;
+        EXIT WHEN NOT FOUND;
+        
+        -- Save to log
+        INSERT INTO PAST_TRIPS_LOG (TripID, OperatorID, RouteID, BusID, TripDate, DepartureTime, BaseFare)
+        VALUES (rec.TripID, rec.OperatorID, rec.RouteID, rec.BusID, rec.TripDate, rec.DepartureTime, rec.BaseFare);
+        
+        -- Remove from active trips (Note: This will cascade to bookings if not handled)
+        DELETE FROM TRIP WHERE TripID = rec.TripID;
+    END LOOP;
+    CLOSE trip_cursor;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 7. Get Operator Past Trips
+CREATE OR REPLACE FUNCTION get_operator_past_trips(p_operator_id INT)
+RETURNS TABLE (
+    tripid INT,
+    tripdate DATE,
+    departuretime TIME,
+    basefare DECIMAL(10, 2),
+    busnumber VARCHAR,
+    bustype VARCHAR,
+    startpoint VARCHAR,
+    endpoint VARCHAR,
+    archivedat TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.TripID as tripid, p.TripDate as tripdate, p.DepartureTime as departuretime, p.BaseFare as basefare, 
+           b.BusNumber as busnumber, b.BusType as bustype, 
+           r.StartPoint as startpoint, r.EndPoint as endpoint,
+           p.ArchivedAt as archivedat
+    FROM PAST_TRIPS_LOG p
+    JOIN BUS b ON p.BusID = b.BusID
+    JOIN ROUTE r ON p.RouteID = r.RouteID
+    WHERE p.OperatorID = p_operator_id
+    ORDER BY p.TripDate DESC, p.DepartureTime DESC
+    LIMIT 50;
+END;
+$$ LANGUAGE plpgsql;
+
+
