@@ -60,9 +60,27 @@ const getOperatorTrips = async (req, res) => {
     }
 };
 
+const getOperatorPastTrips = async (req, res) => {
+    const operatorId = req.user.id;
+    try {
+        const result = await db.query(
+            'SELECT * FROM get_operator_past_trips($1)',
+            [operatorId]
+        );
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Fetch Operator Past Trips Error:', err);
+        res.status(500).json({ error: 'Database error fetching past trips' });
+    }
+};
+
 const getOperatorStats = async (req, res) => {
     const operatorId = req.user.id;
     try {
+        // Run automated RDBMS cleanup tasks (Ghost Seats & Trip Archival)
+        await db.query('SELECT cleanup_expired_bookings()');
+        await db.query('SELECT archive_past_trips()');
+
         const result = await db.query('SELECT * FROM get_operator_stats($1)', [operatorId]);
         const stats = result.rows[0];
 
@@ -79,6 +97,7 @@ const getOperatorStats = async (req, res) => {
 };
 
 const getRoutes = async (req, res) => {
+    // ... existing getRoutes ...
     try {
         const result = await db.query('SELECT * FROM get_all_routes()');
         res.status(200).json(result.rows);
@@ -89,6 +108,7 @@ const getRoutes = async (req, res) => {
 };
 
 const getTripDetails = async (req, res) => {
+    // ... existing getTripDetails ...
     const { id } = req.params;
     try {
         const result = await db.query(
@@ -107,4 +127,13 @@ const getTripDetails = async (req, res) => {
     }
 };
 
-module.exports = { searchTrips, assignTrip, getOperatorTrips, getOperatorStats, getRoutes, getTripDetails };
+module.exports = {
+    searchTrips,
+    assignTrip,
+    getOperatorTrips,
+    getOperatorPastTrips,
+    getOperatorStats,
+    getRoutes,
+    getTripDetails
+};
+
