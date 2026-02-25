@@ -12,20 +12,23 @@ const OperatorDashboard = () => {
         todayBookings: 0,
         todayRevenue: 0
     });
-    const [trips, setTrips] = useState([]);
+    const [activeTrips, setActiveTrips] = useState([]);
+    const [pastTrips, setPastTrips] = useState([]);
     const [pendingRequests, setPendingRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchDashboardData = async () => {
         if (!user) return;
         try {
-            const [statsRes, tripsRes, refundsRes] = await Promise.all([
+            const [statsRes, activeTripsRes, pastTripsRes, refundsRes] = await Promise.all([
                 api.get('/trips/operator-stats'),
                 api.get('/trips/operator-trips'),
+                api.get('/trips/operator-past-trips'),
                 api.get('/bookings/operator/refund-requests')
             ]);
             setStats(statsRes.data);
-            setTrips(tripsRes.data);
+            setActiveTrips(activeTripsRes.data);
+            setPastTrips(pastTripsRes.data);
             setPendingRequests(refundsRes.data);
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
@@ -33,7 +36,7 @@ const OperatorDashboard = () => {
             setLoading(false);
         }
     };
-
+    // ... handleRefundAction and useEffect ...
     const handleRefundAction = async (refundId, decision) => {
         if (!window.confirm(`Are you sure you want to ${decision.toLowerCase()} this refund?`)) return;
         try {
@@ -96,7 +99,7 @@ const OperatorDashboard = () => {
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Bookings Today</p>
-                        <p className="text-2xl font-black text-gray-900">{stats.todayBookings}</p>
+                        <p className="text-2xl font-black text-gray-900">{stats.todayBookings || 0}</p>
                     </div>
                 </div>
 
@@ -106,17 +109,17 @@ const OperatorDashboard = () => {
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Revenue Today</p>
-                        <p className="text-2xl font-black text-gray-900">৳{stats.todayRevenue.toLocaleString()}</p>
+                        <p className="text-2xl font-black text-gray-900">৳{stats.todayRevenue ? stats.todayRevenue.toLocaleString() : 0}</p>
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-12">
-                    {/* Recent Trips */}
+                    {/* Active Trips */}
                     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-                            <h3 className="font-bold text-gray-900">Recent Trip Assignments</h3>
+                            <h3 className="font-bold text-gray-900">Active Trip Assignments</h3>
                             <Link to="/operator/trips" className="text-indigo-600 text-sm font-bold flex items-center gap-1 hover:underline">
                                 View All <ArrowUpRight size={14} />
                             </Link>
@@ -124,8 +127,8 @@ const OperatorDashboard = () => {
                         <div className="p-0">
                             {loading ? (
                                 <div className="p-12 text-center text-gray-500">Loading trips...</div>
-                            ) : trips.length === 0 ? (
-                                <div className="p-12 text-center text-gray-400">No trips assigned yet.</div>
+                            ) : activeTrips.length === 0 ? (
+                                <div className="p-12 text-center text-gray-400">No active trips.</div>
                             ) : (
                                 <table className="w-full text-left">
                                     <thead className="bg-gray-50/50 text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -137,7 +140,7 @@ const OperatorDashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {trips.map(trip => (
+                                        {activeTrips.map(trip => (
                                             <tr key={trip.tripid} className="hover:bg-gray-50/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
@@ -154,6 +157,51 @@ const OperatorDashboard = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <button className="text-indigo-600 font-bold text-sm">Manage</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Past Trips Log */}
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                            <h3 className="font-bold text-gray-500 flex items-center gap-2">
+                                <LayoutDashboard size={18} className="text-gray-400" /> Past Trips (Archived)
+                            </h3>
+                        </div>
+                        <div className="p-0">
+                            {loading ? (
+                                <div className="p-12 text-center text-gray-500">Loading history...</div>
+                            ) : pastTrips.length === 0 ? (
+                                <div className="p-12 text-center text-gray-400">No past trips recorded.</div>
+                            ) : (
+                                <table className="w-full text-left opacity-75">
+                                    <thead className="bg-gray-50/50 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Bus</th>
+                                            <th className="px-6 py-4">Route</th>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {pastTrips.map(trip => (
+                                            <tr key={trip.tripid} className="bg-gray-50/20">
+                                                <td className="px-6 py-4">
+                                                    <span className="font-semibold text-gray-500">{trip.busnumber}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-bold text-gray-400">{trip.startpoint} → {trip.endpoint}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-xs text-gray-500">{new Date(trip.tripdate).toLocaleDateString()}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-md uppercase tracking-wider">Completed</span>
                                                 </td>
                                             </tr>
                                         ))}
