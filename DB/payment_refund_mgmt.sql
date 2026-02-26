@@ -95,13 +95,17 @@ SELECT
     r.RefundAmount as amount,
     r.Status as refundstatus,
     r.CreatedAt as requestedat,
-    t.OperatorID as operatorid
+    t.OperatorID as operatorid,
+    comp.IssueType as issuetype,
+    comp.Description as reason
 FROM REFUND r
 JOIN BOOKING b ON r.BookingID = b.BookingID
 JOIN CUSTOMER c ON b.CustomerID = c.CustomerID
 JOIN TRIP t ON b.TripID = t.TripID
 JOIN ROUTE rt ON t.RouteID = rt.RouteID
-JOIN SEAT s ON b.SeatID = s.SeatID;
+JOIN SEAT s ON b.SeatID = s.SeatID
+LEFT JOIN COMPLAINT comp ON b.BookingID = comp.BookingID;
+
 
 -- 4. Procedure: Handle Refund Decision (Operator)
 CREATE OR REPLACE PROCEDURE handle_refund_decision(

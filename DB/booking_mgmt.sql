@@ -81,7 +81,9 @@ GROUP BY
 -- 4. Cancel or Request Refund (Customer)
 CREATE OR REPLACE PROCEDURE cancel_or_request_refund(
     p_booking_id INT,
-    p_customer_id INT
+    p_customer_id INT,
+    p_reason TEXT DEFAULT NULL,
+    p_issue_type VARCHAR(100) DEFAULT 'Cancellation'
 ) AS $$
 DECLARE
     v_current_status VARCHAR;
@@ -95,14 +97,27 @@ BEGIN
         SET BookingStatus = 'Cancelled' 
         WHERE BookingID = p_booking_id;
         
+        -- Optional: Log reason for pending cancellation too
+        IF p_reason IS NOT NULL THEN
+            INSERT INTO COMPLAINT (CustomerID, BookingID, IssueType, Description, Status)
+            VALUES (p_customer_id, p_booking_id, p_issue_type, p_reason, 'Open');
+        END IF;
+        
     ELSIF v_current_status = 'Confirmed' THEN
         UPDATE BOOKING 
         SET BookingStatus = 'RefundRequested' 
         WHERE BookingID = p_booking_id;
+        
+        -- Create a complaint record for the refund/cancellation reason
+        IF p_reason IS NOT NULL THEN
+            INSERT INTO COMPLAINT (CustomerID, BookingID, IssueType, Description, Status)
+            VALUES (p_customer_id, p_booking_id, p_issue_type, p_reason, 'Open');
+        END IF;
         
     ELSE
         RAISE EXCEPTION 'Booking cannot be cancelled in its current state (%)', v_current_status;
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
 
