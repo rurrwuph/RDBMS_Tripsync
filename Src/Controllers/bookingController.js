@@ -64,11 +64,16 @@ const getTripSeats = async (req, res) => {
 
 
 const handleCancellationRequest = async (req, res) => {
-    const { bookingId } = req.body;
+    const { bookingId, reason, issueType } = req.body;
     const customerId = req.user.id;
 
     try {
-        await db.query('CALL cancel_or_request_refund($1, $2)', [bookingId, customerId]);
+        await db.query('CALL cancel_or_request_refund($1, $2, $3, $4)', [
+            bookingId,
+            customerId,
+            reason || null,
+            issueType || 'Cancellation'
+        ]);
 
         const result = await db.query('SELECT BookingStatus FROM BOOKING WHERE BookingID = $1', [bookingId]);
         const status = result.rows[0].bookingstatus;
@@ -80,9 +85,11 @@ const handleCancellationRequest = async (req, res) => {
                 : "Refund request submitted for review."
         });
     } catch (error) {
+        console.error("Cancellation Procedure Error:", error);
         res.status(400).json({ error: error.message });
     }
 };
+
 
 
 const getOperatorRefunds = async (req, res) => {
