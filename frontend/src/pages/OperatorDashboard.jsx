@@ -229,9 +229,11 @@ const OperatorDashboard = () => {
                                         <tr>
                                             <th className="px-6 py-4">Customer</th>
                                             <th className="px-6 py-4">Trip Info</th>
+                                            <th className="px-6 py-4">Reason</th>
                                             <th className="px-6 py-4">Amount</th>
                                             <th className="px-6 py-4">Decision</th>
                                         </tr>
+
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
                                         {pendingRequests.filter(r => r.refundstatus === 'Pending').map(req => (
@@ -243,6 +245,10 @@ const OperatorDashboard = () => {
                                                 <td className="px-6 py-4">
                                                     <p className="text-sm font-semibold">{req.startpoint} → {req.endpoint}</p>
                                                     <p className="text-xs text-gray-500">{new Date(req.tripdate).toLocaleDateString()} Seat: {req.seatnumber}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-xs font-black text-rose-500 uppercase tracking-tighter">{req.issuetype || 'Cancellation'}</p>
+                                                    <p className="text-sm font-medium text-gray-600 line-clamp-2 max-w-[200px]" title={req.reason}>{req.reason || 'No description provided'}</p>
                                                 </td>
                                                 <td className="px-6 py-4 font-black text-rose-600">৳{req.amount}</td>
                                                 <td className="px-6 py-4">
@@ -263,6 +269,7 @@ const OperatorDashboard = () => {
                                                 </td>
                                             </tr>
                                         ))}
+
                                     </tbody>
                                 </table>
                             )}
