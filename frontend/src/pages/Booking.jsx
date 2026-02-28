@@ -114,10 +114,11 @@ const Booking = () => {
                 >
                     Proceed to Payment <CreditCard size={20} />
                 </button>
-                <button onClick={() => navigate('/')} className="w-full bg-gray-100 text-gray-600 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all">
-                    Finish Later
+                <button onClick={() => navigate('/profile')} className="w-full bg-gray-100 text-gray-600 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all">
+                    Pay Later
                 </button>
             </div>
+
         </div>
     );
 

@@ -277,14 +277,39 @@ const Profile = () => {
                                                     </div>
 
                                                     {(booking.status === 'Confirmed' || booking.status === 'Pending') && (
-                                                        <button
-                                                            disabled={actionLoading === booking.booking_list}
-                                                            onClick={() => openCancelModal(booking)}
-                                                            className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-700 underline decoration-rose-200 disabled:opacity-50"
-                                                        >
-                                                            {actionLoading === booking.booking_list ? 'Processing...' : (booking.status === 'Pending' ? 'Cancel Seats' : 'Request Refund')}
-                                                        </button>
+                                                        <div className="flex flex-col items-end gap-2">
+                                                            {booking.status === 'Pending' && (
+                                                                <button
+                                                                    onClick={() => navigate('/payment', {
+                                                                        state: {
+                                                                            bookingIds: booking.booking_list.split(',').map(id => parseInt(id.trim())),
+                                                                            trip: {
+                                                                                tripid: booking.tripid,
+                                                                                startpoint: booking.startpoint,
+                                                                                endpoint: booking.endpoint,
+                                                                                tripdate: booking.tripdate,
+                                                                                departuretime: booking.departuretime,
+                                                                                bustype: booking.bustype
+                                                                            },
+                                                                            selectedSeats: booking.seatnumbers.split(',').map(s => ({ seatnumber: s.trim() })),
+                                                                            totalPrice: booking.totalfare
+                                                                        }
+                                                                    })}
+                                                                    className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                                                >
+                                                                    Pay Now
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                disabled={actionLoading === booking.booking_list}
+                                                                onClick={() => openCancelModal(booking)}
+                                                                className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-700 underline decoration-rose-200 disabled:opacity-50"
+                                                            >
+                                                                {actionLoading === booking.booking_list ? 'Processing...' : (booking.status === 'Pending' ? 'Cancel Seats' : 'Request Refund')}
+                                                            </button>
+                                                        </div>
                                                     )}
+
                                                 </div>
                                             </div>
 
