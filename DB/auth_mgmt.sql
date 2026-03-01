@@ -77,3 +77,32 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 6. Change Password
+CREATE OR REPLACE PROCEDURE change_password(
+    p_user_id INT,
+    p_role VARCHAR,
+    p_new_hash TEXT
+) AS $$
+BEGIN
+    IF p_role = 'customer' THEN
+        UPDATE CUSTOMER SET Password_Hash = p_new_hash WHERE CustomerID = p_user_id;
+    ELSIF p_role = 'operator' THEN
+        UPDATE OPERATOR SET AdminPassword_Hash = p_new_hash WHERE OperatorID = p_user_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 7. Delete Account
+CREATE OR REPLACE PROCEDURE delete_account(
+    p_user_id INT,
+    p_role VARCHAR
+) AS $$
+BEGIN
+    IF p_role = 'customer' THEN
+        DELETE FROM CUSTOMER WHERE CustomerID = p_user_id;
+    ELSIF p_role = 'operator' THEN
+        DELETE FROM OPERATOR WHERE OperatorID = p_user_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
