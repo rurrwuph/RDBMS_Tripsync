@@ -24,7 +24,7 @@ const login = async (req, res) => {
             userDataQuery = 'SELECT OperatorID, CompanyName FROM OPERATOR WHERE AdminEmail = $1';
         }
 
-        const result = await db.query(sqlQuery, [email, 'check']);
+        const result = await db.query(sqlQuery, [email]);
         const storedHash = result.rows[0].hash;
 
         if (!storedHash) {

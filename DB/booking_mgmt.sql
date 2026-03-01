@@ -50,6 +50,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE VIEW v_customer_bookings AS
 SELECT 
     b.CustomerID,
+    b.TripID,
     STRING_AGG(b.BookingID::text, ', ' ORDER BY b.BookingID) as booking_list,
     b.BookingStatus as status, 
     b.BookingTime as bookingtime,
@@ -77,6 +78,7 @@ GROUP BY
     r.EndPoint, 
     bus.BusNumber, 
     bus.BusType;
+
 
 -- 4. Cancel or Request Refund (Customer)
 CREATE OR REPLACE PROCEDURE cancel_or_request_refund(

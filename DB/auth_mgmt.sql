@@ -55,3 +55,25 @@ BEGIN
     RETURN v_hash;
 END;
 $$ LANGUAGE plpgsql;
+-- 5. Get User Profile
+CREATE OR REPLACE FUNCTION get_user_profile(p_user_id INT, p_role VARCHAR)
+RETURNS TABLE (
+    id INT,
+    name VARCHAR,
+    email VARCHAR,
+    phone VARCHAR,
+    joined TIMESTAMP,
+    status VARCHAR
+) AS $$
+BEGIN
+    IF p_role = 'customer' THEN
+        RETURN QUERY
+        SELECT CustomerID, FullName, Email, Phone, CreatedAt, 'Active'::VARCHAR
+        FROM CUSTOMER WHERE CustomerID = p_user_id;
+    ELSIF p_role = 'operator' THEN
+        RETURN QUERY
+        SELECT OperatorID, CompanyName, AdminEmail, NULL::VARCHAR, NULL::TIMESTAMP, Status
+        FROM OPERATOR WHERE OperatorID = p_user_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
