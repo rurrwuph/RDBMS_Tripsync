@@ -168,4 +168,43 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 8. Update Trip
+CREATE OR REPLACE PROCEDURE update_trip(
+    p_trip_id INT,
+    p_operator_id INT,
+    p_trip_date DATE,
+    p_departure_time TIME,
+    p_base_fare DECIMAL
+) AS $$
+DECLARE
+    v_owner_id INT;
+BEGIN
+    SELECT OperatorID INTO v_owner_id FROM TRIP WHERE TripID = p_trip_id;
+    IF v_owner_id IS NULL OR v_owner_id <> p_operator_id THEN
+        RAISE EXCEPTION 'Operator does not own this trip';
+    END IF;
+
+    UPDATE TRIP 
+    SET TripDate = p_trip_date, DepartureTime = p_departure_time, BaseFare = p_base_fare
+    WHERE TripID = p_trip_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 9. Delete Trip
+CREATE OR REPLACE PROCEDURE delete_trip(
+    p_trip_id INT,
+    p_operator_id INT
+) AS $$
+DECLARE
+    v_owner_id INT;
+BEGIN
+    SELECT OperatorID INTO v_owner_id FROM TRIP WHERE TripID = p_trip_id;
+    IF v_owner_id IS NULL OR v_owner_id <> p_operator_id THEN
+        RAISE EXCEPTION 'Operator does not own this trip';
+    END IF;
+
+    DELETE FROM TRIP WHERE TripID = p_trip_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
