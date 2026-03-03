@@ -56,3 +56,58 @@ BEGIN
     ORDER BY b.BookingTime DESC;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 3. Get Operator Complaints
+CREATE OR REPLACE FUNCTION get_operator_complaints(p_operator_id INT)
+RETURNS TABLE (
+    complaintid INT,
+    customername VARCHAR,
+    bookingid INT,
+    issuetype VARCHAR,
+    description TEXT,
+    status VARCHAR,
+    createdat TIMESTAMP,
+    tripdate DATE,
+    startpoint VARCHAR,
+    endpoint VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.ComplaintID as complaintid,
+        cust.FullName as customername,
+        c.BookingID as bookingid,
+        c.IssueType as issuetype,
+        c.Description as description,
+        c.Status as status,
+        c.CreatedAt as createdat,
+        t.TripDate as tripdate,
+        rt.StartPoint as startpoint,
+        rt.EndPoint as endpoint
+    FROM COMPLAINT c
+    JOIN CUSTOMER cust ON c.CustomerID = cust.CustomerID
+    JOIN BOOKING b ON c.BookingID = b.BookingID
+    JOIN TRIP t ON b.TripID = t.TripID
+    JOIN ROUTE rt ON t.RouteID = rt.RouteID
+    WHERE t.OperatorID = p_operator_id
+    ORDER BY c.CreatedAt DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 4. Update Complaint Status
+CREATE OR REPLACE PROCEDURE update_complaint_status(
+    p_complaint_id INT,
+    p_operator_id INT,
+    p_status VARCHAR,
+    p_action_desc TEXT
+) AS $$
+BEGIN
+    UPDATE COMPLAINT
+    SET Status = p_status
+    WHERE ComplaintID = p_complaint_id;
+
+    INSERT INTO COMPLAINT_ACTIONS (ComplaintID, OperatorID, ActionDescription)
+    VALUES (p_complaint_id, p_operator_id, p_action_desc);
+END;
+$$ LANGUAGE plpgsql;
+
