@@ -1,7 +1,12 @@
 -- TRIP & ROUTE MANAGEMENT
 
 -- 1. Search Trips
-CREATE OR REPLACE FUNCTION search_trips(p_start VARCHAR, p_end VARCHAR, p_date DATE)
+CREATE OR REPLACE FUNCTION search_trips(
+    p_start VARCHAR, 
+    p_end VARCHAR, 
+    p_date DATE,
+    p_sort_by VARCHAR DEFAULT 'time_asc'
+)
 RETURNS TABLE (
     TripID INT,
     CompanyName VARCHAR,
@@ -18,7 +23,12 @@ BEGIN
     JOIN ROUTE r ON t.RouteID = r.RouteID
     WHERE r.StartPoint = p_start 
       AND r.EndPoint = p_end 
-      AND t.TripDate = p_date;
+      AND t.TripDate = p_date
+    ORDER BY 
+        CASE WHEN p_sort_by = 'price_asc' THEN t.BaseFare END ASC NULLS LAST,
+        CASE WHEN p_sort_by = 'price_desc' THEN t.BaseFare END DESC NULLS LAST,
+        CASE WHEN p_sort_by = 'time_asc' THEN t.DepartureTime END ASC NULLS LAST,
+        CASE WHEN p_sort_by = 'time_desc' THEN t.DepartureTime END DESC NULLS LAST;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -206,5 +216,3 @@ BEGIN
     DELETE FROM TRIP WHERE TripID = p_trip_id;
 END;
 $$ LANGUAGE plpgsql;
-
-

@@ -8,6 +8,7 @@ const tripRoutes = require('./src/routes/tripRoutes');
 const busRoutes = require('./src/routes/busRoutes');
 const bookingRoutes = require('./src/routes/bookingRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
+const userRoutes = require('./src/routes/userRoutes');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/buses', busRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/users', userRoutes);
 
 
 app.get('/api/health', async (req, res) => {

@@ -27,6 +27,7 @@ BEGIN
          AND b.BookingTime::DATE = CURRENT_DATE) as today_revenue;
 END;
 $$ LANGUAGE plpgsql;
+
 -- 2. Get Pending Operator Actions
 CREATE OR REPLACE FUNCTION get_pending_operator_actions(p_operator_id INT)
 RETURNS TABLE (
@@ -57,7 +58,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 3. Get Operator Complaints
+-- 3. Get Operator Analytics
+CREATE OR REPLACE FUNCTION get_operator_analytics(p_operator_id INT)
+RETURNS TABLE (
+    trip_date DATE,
+    route_id INT,
+    start_point VARCHAR,
+    end_point VARCHAR,
+    total_bookings BIGINT,
+    total_revenue DECIMAL(12, 2)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        t.TripDate as trip_date,
+        t.RouteID as route_id,
+        r.StartPoint as start_point,
+        r.EndPoint as end_point,
+        COUNT(b.BookingID) as total_bookings,
+        SUM(t.BaseFare) as total_revenue
+    FROM BOOKING b
+    JOIN TRIP t ON b.TripID = t.TripID
+    JOIN ROUTE r ON t.RouteID = r.RouteID
+    WHERE t.OperatorID = p_operator_id 
+    AND b.BookingStatus = 'Confirmed'
+    GROUP BY CUBE(t.TripDate, (t.RouteID, r.StartPoint, r.EndPoint))
+    ORDER BY t.TripDate DESC NULLS LAST, t.RouteID ASC NULLS LAST;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 4. Get Operator Complaints
 CREATE OR REPLACE FUNCTION get_operator_complaints(p_operator_id INT)
 RETURNS TABLE (
     complaintid INT,
@@ -94,7 +124,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4. Update Complaint Status
+-- 5. Update Complaint Status
 CREATE OR REPLACE PROCEDURE update_complaint_status(
     p_complaint_id INT,
     p_operator_id INT,
@@ -110,4 +140,3 @@ BEGIN
     VALUES (p_complaint_id, p_operator_id, p_action_desc);
 END;
 $$ LANGUAGE plpgsql;
-
