@@ -129,24 +129,7 @@ const processRefundDecision = async (req, res) => {
 const getPendingOperatorActions = async (req, res) => {
     const operatorId = req.user.id;
     try {
-        const result = await db.query(`
-            SELECT 
-                b.TripID as tripid,
-                STRING_AGG(b.BookingID::text, ', ') as bookingids,
-                b.PaymentID as paymentid,
-                c.FullName as customername,
-                STRING_AGG(s.SeatNumber, ', ') as seatnumbers,
-                b.BookingStatus as status
-            FROM BOOKING b
-            JOIN TRIP t ON b.TripID = t.TripID
-            JOIN CUSTOMER c ON b.CustomerID = c.CustomerID
-            JOIN SEAT s ON b.SeatID = s.SeatID
-            WHERE t.OperatorID = $1
-            AND b.BookingStatus IN ('Pending', 'RefundRequested')
-            GROUP BY b.TripID, b.PaymentID, c.FullName, b.BookingStatus, b.BookingTime
-            ORDER BY b.BookingTime DESC
-        `, [operatorId]);
-
+        const result = await db.query('SELECT * FROM get_pending_operator_actions($1)', [operatorId]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error('Fetch Pending Actions Error:', err);
