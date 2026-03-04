@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 const searchTrips = async (req, res) => {
-    const { start, end, date } = req.query;
+    const { start, end, date, sortBy } = req.query;
 
     if (!start || !end || !date) {
         return res.status(400).json({ error: 'Please provide start, end, and date' });
@@ -9,8 +9,8 @@ const searchTrips = async (req, res) => {
 
     try {
         const result = await db.query(
-            'SELECT * FROM search_trips($1, $2, $3)',
-            [start, end, date]
+            'SELECT * FROM search_trips($1, $2, $3, $4)',
+            [start, end, date, sortBy || 'time_asc']
         );
 
         if (result.rows.length === 0) {
@@ -127,6 +127,59 @@ const getTripDetails = async (req, res) => {
     }
 };
 
+const updateTrip = async (req, res) => {
+    const operatorId = req.user.id;
+    const { id } = req.params;
+    const { tripDate, departureTime, baseFare } = req.body;
+
+    try {
+        await db.query(
+            'CALL update_trip($1, $2, $3, $4, $5)',
+            [id, operatorId, tripDate, departureTime, baseFare]
+        );
+        res.status(200).json({ message: 'Trip updated successfully' });
+    } catch (err) {
+        if (err.message.includes('Operator does not own this trip')) {
+            return res.status(403).json({ error: 'Security Alert: You do not own this trip' });
+        }
+        console.error('Update Trip Error:', err);
+        res.status(500).json({ error: 'Database error updating trip' });
+    }
+};
+
+const deleteTrip = async (req, res) => {
+    const operatorId = req.user.id;
+    const { id } = req.params;
+
+    try {
+        await db.query(
+            'CALL delete_trip($1, $2)',
+            [id, operatorId]
+        );
+        res.status(200).json({ message: 'Trip deleted successfully' });
+    } catch (err) {
+        if (err.message.includes('Operator does not own this trip')) {
+            return res.status(403).json({ error: 'Security Alert: You do not own this trip' });
+        }
+        console.error('Delete Trip Error:', err);
+        res.status(500).json({ error: 'Database error deleting trip' });
+    }
+};
+
+const getOperatorAnalytics = async (req, res) => {
+    const operatorId = req.user.id;
+    try {
+        const result = await db.query(
+            'SELECT * FROM get_operator_analytics($1)',
+            [operatorId]
+        );
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Fetch Operator Analytics Error:', err);
+        res.status(500).json({ error: 'Database error fetching analytics' });
+    }
+};
+
 module.exports = {
     searchTrips,
     assignTrip,
@@ -134,6 +187,9 @@ module.exports = {
     getOperatorPastTrips,
     getOperatorStats,
     getRoutes,
-    getTripDetails
+    getTripDetails,
+    updateTrip,
+    deleteTrip,
+    getOperatorAnalytics
 };
 
