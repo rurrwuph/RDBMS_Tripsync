@@ -8,6 +8,7 @@ const SearchResults = () => {
     const [trips, setTrips] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [sortBy, setSortBy] = useState('time_asc');
 
     const from = searchParams.get('from');
     const to = searchParams.get('to');
@@ -17,7 +18,7 @@ const SearchResults = () => {
         const fetchTrips = async () => {
             setLoading(true);
             try {
-                const response = await api.get(`/trips/search?start=${from}&end=${to}&date=${date}`);
+                const response = await api.get(`/trips/search?start=${from}&end=${to}&date=${date}&sortBy=${sortBy}`);
                 setTrips(response.data.trips || []);
                 setError(null);
             } catch (err) {
@@ -37,7 +38,7 @@ const SearchResults = () => {
         } else {
             setLoading(false);
         }
-    }, [from, to, date]);
+    }, [from, to, date, sortBy]);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
@@ -53,9 +54,20 @@ const SearchResults = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 transition-all font-medium">
-                        <Filter size={18} /> Sort & Filter
-                    </button>
+                    <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-sm font-medium">
+                        <Filter size={18} className="text-gray-400" />
+                        <span className="text-gray-600 text-sm">Sort By:</span>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="bg-transparent border-none outline-none text-indigo-600 font-bold text-sm"
+                        >
+                            <option value="time_asc">Departure (Earliest)</option>
+                            <option value="time_desc">Departure (Latest)</option>
+                            <option value="price_asc">Price (Lowest)</option>
+                            <option value="price_desc">Price (Highest)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

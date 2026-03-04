@@ -101,6 +101,16 @@ const Home = () => {
             .sort();
     }, [searchData.from]);
 
+    useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.role === 'operator') {
+                navigate('/operator');
+            }
+        }
+    }, [navigate]);
+
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchData.from && searchData.to && searchData.date) {
