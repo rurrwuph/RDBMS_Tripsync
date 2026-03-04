@@ -23,6 +23,7 @@ const Payment = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const [transactionId, setTransactionId] = useState('');
 
     // If no data is passed, redirect back to home or show error
     useEffect(() => {
@@ -46,6 +47,7 @@ const Payment = () => {
                 paymentMethod: methodLabel
             });
 
+            setTransactionId(`TS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
             setSuccess(true);
         } catch (err) {
             setError(err.response?.data?.error || "Payment failed. Please try again.");
@@ -55,27 +57,89 @@ const Payment = () => {
     };
 
     if (success) return (
-        <div className="max-w-xl mx-auto mt-20 p-12 bg-white rounded-3xl border border-emerald-50 text-center shadow-2xl animate-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
-                <CheckCircle2 size={56} />
-            </div>
-            <h2 className="text-3xl font-black text-gray-900 mb-4">Payment Confirmed!</h2>
-            <p className="text-gray-600 mb-8 leading-relaxed">
-                Your journey from <span className="font-bold">{trip?.startpoint}</span> to <span className="font-bold">{trip?.endpoint}</span> is all set! We've sent the tickets to your email.
-            </p>
-            <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-3">
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Transaction ID</span>
-                    <span className="font-mono font-bold text-gray-900">#TS-{Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
+        <div className="min-h-screen bg-gray-50 py-12 px-4 relative">
+            {/* Screen UI - Hidden on Print */}
+            <div className="print:hidden max-w-xl mx-auto mt-10 p-12 bg-white rounded-3xl border border-emerald-50 text-center shadow-2xl animate-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <CheckCircle2 size={56} />
                 </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Amount Paid</span>
-                    <span className="font-bold text-emerald-600">৳{totalPrice}</span>
+                <h2 className="text-3xl font-black text-gray-900 mb-4">Payment Confirmed!</h2>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                    Your journey from <span className="font-bold">{trip?.startpoint}</span> to <span className="font-bold">{trip?.endpoint}</span> is all set! We've sent the tickets to your email.
+                </p>
+                <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left space-y-3">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Transaction ID</span>
+                        <span className="font-mono font-bold text-gray-900">#{transactionId}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Amount Paid</span>
+                        <span className="font-bold text-emerald-600">৳{totalPrice}</span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => window.print()} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all">
+                        <Ticket size={20} /> Download PDF
+                    </button>
+                    <button onClick={() => navigate('/profile')} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-all">
+                        View Bookings
+                    </button>
                 </div>
             </div>
-            <button onClick={() => navigate('/')} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-indigo-600 transition-all">
-                Return to Home
-            </button>
+
+            {/* Print UI - Visible ONLY on Print */}
+            <div className="hidden print:block absolute top-0 left-0 w-full bg-white p-12 text-black font-sans">
+                <div className="border-[6px] border-gray-900 rounded-[3rem] p-12 relative overflow-hidden">
+                    {/* Decorative Elements */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gray-100 rounded-bl-[100%] -z-10 opacity-50"></div>
+
+                    <div className="flex justify-between items-end border-b-4 border-dashed border-gray-300 pb-10 mb-10">
+                        <div>
+                            <h1 className="text-6xl font-black tracking-tighter text-gray-900 mb-2">TripSync</h1>
+                            <p className="text-xl font-bold text-gray-500 tracking-[0.3em] uppercase">Boarding Pass</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Transaction</p>
+                            <p className="text-3xl font-black font-mono">#{transactionId}</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-16 mb-12">
+                        <div className="space-y-8">
+                            <div>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Passenger Route</p>
+                                <h2 className="text-4xl font-black text-gray-900">{trip?.startpoint} <span className="text-gray-300 mx-2">→</span> {trip?.endpoint}</h2>
+                            </div>
+                            <div>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Date & Time</p>
+                                <p className="text-2xl font-bold text-gray-900">{new Date(trip?.tripdate).toLocaleDateString()} at {trip?.departuretime}</p>
+                            </div>
+                        </div>
+                        <div className="space-y-8 border-l-4 border-gray-100 pl-16">
+                            <div>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Operator Info</p>
+                                <p className="text-2xl font-bold text-gray-900">{trip?.bustype} Class</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-1">Assigned Seats</p>
+                                <p className="text-4xl font-black text-gray-900 tracking-wider">
+                                    {selectedSeats?.map(s => s.seatnumber).join(', ')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-100 rounded-3xl p-8 flex justify-between items-center mt-12">
+                        <div>
+                            <p className="text-gray-500 font-bold tracking-widest uppercase text-sm mb-1">Total Amount Paid</p>
+                            <p className="text-4xl font-black text-gray-900">৳{totalPrice}</p>
+                        </div>
+                        <div className="w-32 h-32 bg-gray-300 rounded-xl flex flex-col items-center justify-center p-4">
+                            <span className="font-bold text-center text-gray-500 uppercase tracking-widest text-[10px] leading-tight mt-1">Scan at Gate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 
