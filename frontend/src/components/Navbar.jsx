@@ -24,7 +24,9 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <Link to="/" className="text-gray-600 hover:text-indigo-600 font-medium">Home</Link>
+                        {(!user || user.role !== 'operator') && (
+                            <Link to="/" className="text-gray-600 hover:text-indigo-600 font-medium tracking-tight">Home</Link>
+                        )}
                         {user ? (
                             <>
                                 {user.role === 'operator' && (

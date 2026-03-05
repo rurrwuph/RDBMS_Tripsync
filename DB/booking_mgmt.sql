@@ -47,13 +47,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 3. Customer Booking View
-CREATE OR REPLACE VIEW v_customer_bookings AS
+DROP VIEW IF EXISTS v_customer_bookings CASCADE;
+CREATE VIEW v_customer_bookings AS
 SELECT 
     b.CustomerID,
     b.TripID,
     STRING_AGG(b.BookingID::text, ', ' ORDER BY b.BookingID) as booking_list,
     b.BookingStatus as status, 
-    b.BookingTime as bookingtime,
+    b.BookingTime AT TIME ZONE 'UTC' as bookingtime,
     t.TripDate as tripdate, 
     t.DepartureTime as departuretime,
     r.StartPoint as startpoint, 

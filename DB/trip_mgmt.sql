@@ -66,6 +66,16 @@ BEGIN
         RAISE EXCEPTION 'Operator does not own this bus or bus does not exist';
     END IF;
 
+    -- Check if bus is already busy on the same date and time
+    IF EXISTS (
+        SELECT 1 FROM TRIP 
+        WHERE BusID = p_bus_id 
+          AND TripDate = p_trip_date 
+          AND DepartureTime = p_departure_time
+    ) THEN
+        RAISE EXCEPTION 'Bus is already assigned to another trip at this time.';
+    END IF;
+
     INSERT INTO TRIP (OperatorID, RouteID, BusID, TripDate, DepartureTime, BaseFare)
     VALUES (p_operator_id, p_route_id, p_bus_id, p_trip_date, p_departure_time, p_fare);
 END;

@@ -68,12 +68,12 @@ RETURNS TABLE (
 BEGIN
     IF p_role = 'customer' THEN
         RETURN QUERY
-        SELECT CustomerID, FullName, Email, Phone, CreatedAt, 'Active'::VARCHAR
-        FROM CUSTOMER WHERE CustomerID = p_user_id;
+        SELECT CUSTOMER.CustomerID, CUSTOMER.FullName, CUSTOMER.Email, CUSTOMER.Phone, CUSTOMER.CreatedAt, 'Active'::VARCHAR
+        FROM CUSTOMER WHERE CUSTOMER.CustomerID = p_user_id;
     ELSIF p_role = 'operator' THEN
         RETURN QUERY
-        SELECT OperatorID, CompanyName, AdminEmail, NULL::VARCHAR, NULL::TIMESTAMP, Status
-        FROM OPERATOR WHERE OperatorID = p_user_id;
+        SELECT OPERATOR.OperatorID, OPERATOR.CompanyName, OPERATOR.AdminEmail, NULL::VARCHAR, NULL::TIMESTAMP, OPERATOR.Status
+        FROM OPERATOR WHERE OPERATOR.OperatorID = p_user_id;
     END IF;
 END;
 $$ LANGUAGE plpgsql;

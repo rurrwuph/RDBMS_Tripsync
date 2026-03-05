@@ -70,12 +70,17 @@ CREATE TABLE BOOKING (
     BookingStatus VARCHAR(20) DEFAULT 'Pending' 
         CHECK (BookingStatus IN ('Pending', 'Confirmed', 'Cancelled', 'RefundRequested')),
 
+    -- CONSTRAINT uq_trip_seat_booking UNIQUE (TripID, SeatID) -- Replaced with partial index below for re-booking support
     CONSTRAINT fk_booking_customer FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID) ON DELETE CASCADE,
     CONSTRAINT fk_booking_trip FOREIGN KEY (TripID) REFERENCES TRIP(TripID) ON DELETE CASCADE,
     CONSTRAINT fk_booking_seat FOREIGN KEY (SeatID) REFERENCES SEAT(SeatID) ON DELETE CASCADE,
-    CONSTRAINT fk_booking_payment FOREIGN KEY (PaymentID) REFERENCES PAYMENT(PaymentID) ON DELETE SET NULL,
-    CONSTRAINT uq_trip_seat_booking UNIQUE (TripID, SeatID)
+    CONSTRAINT fk_booking_payment FOREIGN KEY (PaymentID) REFERENCES PAYMENT(PaymentID) ON DELETE SET NULL
 );
+
+-- Partial Unique Index to allow re-booking seats if the previous booking was cancelled
+CREATE UNIQUE INDEX uq_trip_seat_active_booking ON BOOKING (TripID, SeatID) 
+WHERE (BookingStatus <> 'Cancelled');
+
 
 -- 8. PAYMENT Table 
 CREATE TABLE PAYMENT (

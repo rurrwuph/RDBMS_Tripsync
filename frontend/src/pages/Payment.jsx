@@ -25,6 +25,24 @@ const Payment = () => {
     const [error, setError] = useState(null);
     const [transactionId, setTransactionId] = useState('');
 
+    const [couponCode, setCouponCode] = useState('');
+    const [couponApplied, setCouponApplied] = useState(false);
+    const [discount, setDiscount] = useState(0);
+
+    const applyCoupon = () => {
+        if (couponCode === 'LOYALTY-100K-XL') {
+            const disc = Math.min(Math.floor(totalPrice * 0.05), 50);
+            setDiscount(disc);
+            setCouponApplied(true);
+        } else {
+            alert("Invalid Promo Code");
+            setDiscount(0);
+            setCouponApplied(false);
+        }
+    };
+
+    const finalPrice = totalPrice - discount;
+
     // If no data is passed, redirect back to home or show error
     useEffect(() => {
         if (!bookingIds || !trip) {
@@ -43,7 +61,7 @@ const Payment = () => {
 
             await api.post('/payment/process', {
                 bookingIds: bookingIds,
-                amount: totalPrice,
+                amount: finalPrice,
                 paymentMethod: methodLabel
             });
 
@@ -278,14 +296,51 @@ const Payment = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-indigo-700/50">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm text-indigo-200">Seats ({selectedSeats?.length})</span>
+                            <div className="pt-6 border-t border-indigo-700/50 space-y-4">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-indigo-200">Seats ({selectedSeats?.length})</span>
                                     <span className="font-bold">{selectedSeats?.map(s => s.seatnumber).join(', ')}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-2xl font-black mt-4">
-                                    <span>Total</span>
-                                    <span>৳{totalPrice}</span>
+
+                                {/* Promo Code Section */}
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Promo Code"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            className="flex-1 bg-indigo-950/50 border border-indigo-700/50 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-400 font-bold tracking-widest placeholder:text-indigo-700"
+                                        />
+                                        <button
+                                            onClick={applyCoupon}
+                                            className="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg"
+                                        >
+                                            Apply
+                                        </button>
+                                    </div>
+                                    {couponApplied && (
+                                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-400 animate-in slide-in-from-left duration-300">
+                                            <CheckCircle2 size={12} /> Coupon Sync Successful
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 border-t border-indigo-700/50">
+                                    <div className="flex justify-between items-center text-xs text-indigo-300 mb-1">
+                                        <span>Base Total</span>
+                                        <span>৳{totalPrice}</span>
+                                    </div>
+                                    {discount > 0 && (
+                                        <div className="flex justify-between items-center text-xs text-emerald-400 mb-4 font-bold">
+                                            <span>Loyalty Discount</span>
+                                            <span>-৳{discount}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center text-3xl font-black">
+                                        <span>Total</span>
+                                        <span className="tabular-nums">৳{finalPrice}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -298,7 +353,7 @@ const Payment = () => {
                             {loading ? (
                                 <span className="w-6 h-6 border-4 border-indigo-200 border-t-indigo-900 rounded-full animate-spin" />
                             ) : (
-                                <>Pay ৳{totalPrice} Now</>
+                                <>Pay ৳{finalPrice} Now</>
                             )}
                         </button>
                     </div>

@@ -23,6 +23,7 @@ const OperatorDashboard = () => {
     const [showComplaints, setShowComplaints] = useState(false);
     const [complaintsData, setComplaintsData] = useState([]);
     const [editingTrip, setEditingTrip] = useState(null);
+    const [successFeedback, setSuccessFeedback] = useState(null); // { message: string, type: 'success' | 'delete' }
 
     const fetchDashboardData = async () => {
         if (!user) return;
@@ -48,8 +49,9 @@ const OperatorDashboard = () => {
         if (!window.confirm(`Are you sure you want to ${decision.toLowerCase()} this refund?`)) return;
         try {
             await api.post('/bookings/operator/process-refund', { refundId, decision });
-            alert(`Refund ${decision.toLowerCase()} successfully.`);
+            setSuccessFeedback({ message: `Refund ${decision.toLowerCase()} successfully`, type: 'success' });
             fetchDashboardData();
+            setTimeout(() => setSuccessFeedback(null), 3000);
         } catch (err) {
             alert(err.response?.data?.error || "Failed to process refund.");
         }
@@ -75,8 +77,9 @@ const OperatorDashboard = () => {
         if (!window.confirm('Are you sure you want to delete this trip?')) return;
         try {
             await api.delete(`/trips/${id}`);
-            alert('Trip deleted');
+            setSuccessFeedback({ message: 'Trip removed successfully', type: 'delete' });
             fetchDashboardData();
+            setTimeout(() => setSuccessFeedback(null), 3000);
         } catch (err) { alert(err.response?.data?.error || 'Failed to delete trip'); }
     };
 
@@ -198,6 +201,22 @@ const OperatorDashboard = () => {
                             </div>
                             <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl mt-4 hover:bg-indigo-700">Save Changes</button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Success Feedback Overlay */}
+            {successFeedback && (
+                <div className="fixed top-10 right-10 z-[100] animate-in slide-in-from-right-full duration-500">
+                    <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl border ${successFeedback.type === 'delete' ? 'bg-rose-600 border-rose-500' : 'bg-emerald-600 border-emerald-500'
+                        } text-white`}>
+                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white">
+                            {successFeedback.type === 'delete' ? <Trash2 size={18} /> : <CheckCircle2 size={18} />}
+                        </div>
+                        <div>
+                            <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1 opacity-70 text-white">System Signal</p>
+                            <p className="text-sm font-bold text-white">{successFeedback.message}</p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -468,13 +487,6 @@ const OperatorDashboard = () => {
                                 </div>
                                 <ChevronRight size={18} className="text-gray-300 group-hover:text-indigo-600" />
                             </Link>
-                            <button onClick={fetchComplaints} className="w-full p-4 rounded-2xl bg-gray-50 hover:bg-rose-50 hover:text-rose-600 text-left flex items-center justify-between group transition-all">
-                                <div className="flex items-center gap-3 font-semibold">
-                                    <MessageSquare size={20} className="text-gray-400 group-hover:text-rose-600" />
-                                    Complaint Dashboard
-                                </div>
-                                <ChevronRight size={18} className="text-gray-300 group-hover:text-rose-600" />
-                            </button>
                         </div>
                     </div>
                 </div>

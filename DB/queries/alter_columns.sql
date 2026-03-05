@@ -26,3 +26,7 @@ ALTER TABLE BOOKING DROP CONSTRAINT IF EXISTS booking_status_check;
 
 ALTER TABLE BOOKING ADD CONSTRAINT booking_status_check 
 CHECK (BookingStatus IN ('Pending', 'Confirmed', 'Cancelled', 'RefundRequested'));
+
+-- Fix for the "Seat Already Booked" issue after refund
+-- Drop the restrictive unique constraint that prevents re-booking cancelled seats
+ALTER TABLE BOOKING DROP CONSTRAINT IF EXISTS uq_trip_seat_booking;
