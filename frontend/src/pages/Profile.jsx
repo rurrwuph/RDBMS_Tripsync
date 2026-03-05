@@ -110,6 +110,7 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [actionLoading, setActionLoading] = useState(null);
+    const [points, setPoints] = useState(0);
 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
@@ -143,6 +144,13 @@ const Profile = () => {
             ]);
             setProfile(profileRes.data);
             setBookings(bookingsRes.data);
+
+            // Calculate dynamic points
+            if (user?.role === 'customer') {
+                const confirmed = bookingsRes.data.filter(b => b.status === 'Confirmed');
+                const totalSeats = confirmed.reduce((sum, b) => sum + b.booking_list.split(',').length, 0);
+                setPoints(totalSeats * 1000);
+            }
         } catch (err) {
             console.error("Profile Fetch Error:", err);
             setError("Failed to load profile data.");
@@ -444,7 +452,7 @@ const Profile = () => {
                                                     <div>
                                                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">Titanium Points</p>
                                                         <div className="flex items-baseline gap-1.5 mt-1">
-                                                            <span className="text-4xl font-black tabular-nums tracking-tighter italic">105,750</span>
+                                                            <span className="text-4xl font-black tabular-nums tracking-tighter italic">{points.toLocaleString()}</span>
                                                             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em]">Pts</span>
                                                         </div>
                                                     </div>
@@ -455,16 +463,25 @@ const Profile = () => {
 
                                                 <div className="space-y-4">
                                                     <div className="w-full bg-indigo-950/50 h-2 rounded-full overflow-hidden border border-white/5">
-                                                        <div className="bg-indigo-400 h-full w-[88%] rounded-full shadow-[0_0_15px_rgba(129,140,248,0.5)]"></div>
+                                                        <div
+                                                            className="bg-indigo-400 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(129,140,248,0.5)]"
+                                                            style={{ width: `${Math.min((points / 100000) * 100, 100)}%` }}
+                                                        ></div>
                                                     </div>
                                                     <div className="flex justify-between items-center bg-white/5 p-4 rounded-3xl border border-white/10 backdrop-blur-sm">
-                                                        <div>
+                                                        <div className={points < 100000 ? "opacity-20 grayscale pointer-events-none" : ""}>
                                                             <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-1">Elite Code</p>
                                                             <p className="font-mono text-sm font-black text-white tracking-[0.2em]">LOYALTY-100K-XL</p>
                                                         </div>
                                                         <button
-                                                            onClick={() => alert("Requirement: 150,000 Points needed for XL Redemption. Keep traveling to unlock!")}
-                                                            className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center hover:bg-indigo-400 transition-colors"
+                                                            onClick={() => {
+                                                                if (points < 100000) {
+                                                                    alert(`Access Denied: You need ${100000 - points} more points to unlock this reward.`);
+                                                                } else {
+                                                                    alert("Redeem this code at checkout for your XL reward!");
+                                                                }
+                                                            }}
+                                                            className={`w-10 h-10 ${points < 100000 ? 'bg-white/5 text-gray-500' : 'bg-indigo-500 text-white hover:bg-indigo-400'} rounded-xl flex items-center justify-center transition-colors`}
                                                         >
                                                             <ChevronRight size={18} />
                                                         </button>
@@ -545,8 +562,8 @@ const Profile = () => {
                                             <div key={booking.booking_list} className="group relative bg-gray-50/30 rounded-[2rem] p-6 border-2 border-transparent hover:border-indigo-100 hover:bg-white hover:shadow-2xl hover:shadow-indigo-50/50 transition-all duration-500">
                                                 {/* Left Status Bar Indicator */}
                                                 <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-16 rounded-r-full transition-all duration-500 ${booking.status === 'Confirmed' ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' :
-                                                        booking.status === 'Pending' ? 'bg-amber-500 animate-pulse' :
-                                                            booking.status === 'RefundRequested' ? 'bg-rose-500' : 'bg-gray-200'
+                                                    booking.status === 'Pending' ? 'bg-amber-500 animate-pulse' :
+                                                        booking.status === 'RefundRequested' ? 'bg-rose-500' : 'bg-gray-200'
                                                     }`}></div>
 
                                                 <div className="flex flex-col md:flex-row gap-8">
@@ -563,8 +580,8 @@ const Profile = () => {
                                                             </div>
                                                             <div className="flex flex-col items-end gap-3">
                                                                 <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm ${booking.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-600' :
-                                                                        booking.status === 'Pending' ? 'bg-amber-50 text-amber-600' :
-                                                                            booking.status === 'RefundRequested' ? 'bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-400'
+                                                                    booking.status === 'Pending' ? 'bg-amber-50 text-amber-600' :
+                                                                        booking.status === 'RefundRequested' ? 'bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-400'
                                                                     }`}>
                                                                     {booking.status}
                                                                 </div>

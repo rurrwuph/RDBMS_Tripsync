@@ -129,7 +129,7 @@ BEGIN
     JOIN BUS b ON t.BusID = b.BusID
     JOIN ROUTE r ON t.RouteID = r.RouteID
     WHERE t.OperatorID = p_operator_id
-    ORDER BY t.TripDate DESC, t.DepartureTime DESC
+    ORDER BY t.TripDate ASC, t.DepartureTime ASC
     LIMIT 50;
 END;
 $$ LANGUAGE plpgsql;
@@ -183,7 +183,7 @@ BEGIN
     JOIN BUS b ON p.BusID = b.BusID
     JOIN ROUTE r ON p.RouteID = r.RouteID
     WHERE p.OperatorID = p_operator_id
-    ORDER BY p.TripDate DESC, p.DepartureTime DESC
+    ORDER BY p.TripDate ASC, p.DepartureTime ASC
     LIMIT 50;
 END;
 $$ LANGUAGE plpgsql;

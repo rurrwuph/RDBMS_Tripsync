@@ -28,9 +28,30 @@ const Payment = () => {
     const [couponCode, setCouponCode] = useState('');
     const [couponApplied, setCouponApplied] = useState(false);
     const [discount, setDiscount] = useState(0);
+    const [userPoints, setUserPoints] = useState(0);
+
+    useEffect(() => {
+        const fetchPoints = async () => {
+            try {
+                const res = await api.get('/users/my-bookings');
+                const confirmed = res.data.filter(b => b.status === 'Confirmed');
+                const totalSeats = confirmed.reduce((sum, b) => sum + b.booking_list.split(',').length, 0);
+                setUserPoints(totalSeats * 1000);
+            } catch (err) {
+                console.error("Points check failed:", err);
+            }
+        };
+        fetchPoints();
+    }, []);
 
     const applyCoupon = () => {
         if (couponCode === 'LOYALTY-100K-XL') {
+            if (userPoints < 100000) {
+                alert(`Loyalty Status Low: You need 100,000 points to use this coupon. Current: ${userPoints.toLocaleString()} pts.`);
+                setDiscount(0);
+                setCouponApplied(false);
+                return;
+            }
             const disc = Math.min(Math.floor(totalPrice * 0.05), 50);
             setDiscount(disc);
             setCouponApplied(true);
